@@ -1,3 +1,14 @@
+#-------------------------------------------------------------------------------
+# Version:     Python 34
+# Purpose:     RNNLM - to build dictionary 
+#
+# Author:      cmchang
+#
+# Created:     March 10, 2017
+# Copyright:   (c) cmchang 2017
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
 class Dict(object):
     def __init__(self,train_path,test_path,lb,ub,both_dict=None):
         self.test_dict       = None

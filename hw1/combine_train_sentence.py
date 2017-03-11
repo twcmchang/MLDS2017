@@ -1,4 +1,14 @@
-# coding: utf-8
+#-------------------------------------------------------------------------------
+# Version:     Python 34
+# Purpose:     RNNLM - to combine training sentences from training data
+#
+# Author:      cmchang
+#
+# Created:     March 10, 2017
+# Copyright:   (c) cmchang 2017
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
 import os
 import re
 import glob
