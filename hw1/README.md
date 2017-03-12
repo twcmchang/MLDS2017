@@ -1,12 +1,29 @@
-## 資料放置 (Jimmy)
+## Short summary
+ 
+| File name                   | Description |
+| :-------------------------- | :---------- |
+| `combine_train_sentence.py` | 結合所有 .TXT 輸出成檔案: Data/train_sentence|
+| `Dict.py`                   | 定義 Dict class 產生 dictionary |
+| `generate_batch.py`         | 用來產生 sample batch |
+| `select_sentence.py`        | 用來挑選句子，輸出成檔案: Data/pickle_sentence_(threshold)_(#selected) |
+| `main.py`                   | 建立 dictionary，挑選 sentences，訓練 RNN (version 1)|
+
+### Pending:
+| Function                | Description |
+| :---------------------- | :---------- |
+| `Add validation`        | 加入 validation step in main.py |
+| `NCE`                   | 修改 loss function to NCE in main.py |
+| `Output prediction`     | 讀進 testing_data.csv => 預測 => 寫出符合格式的檔案 |
+
+## Directory overview (Jimmy)
 ```
 hw1/
 +-- main.py 
-+-- Dict.py
++-- Dict.py # define class Dict
 +-- combine_train_sentence.py
 +-- select_sentence.py
-+-- Dict_v0311 (Generated in main.py, utilized Dict.py)
-+-- pickle_sentence_***** (Generated in main.py, utilized select_sentence.py)
++-- Dict_v0311 (import Dict.py, and generated in main.py)
++-- pickle_sentence_***** (import select_sentence.py, and generated in main.py)
 +-- Data/
 |   +-- train/
 |       +-- *.TXT 
