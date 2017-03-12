@@ -16,6 +16,7 @@ class Dict(object):
         self.sort_test_list  = None
         self.sort_train_list = None
         self.train_sentences = None
+        self.not_in_bag      = "not-a-word"
         self.both_dict       = both_dict
         if both_dict is None:
             print("construct dict ...")
@@ -42,6 +43,7 @@ class Dict(object):
         self.test_dict = {}
         
         # read testing_data.csv
+        import pandas as pd
         test = pd.read_csv(test_path,sep=",")
         
         # remove useless characters 
@@ -94,8 +96,8 @@ class Dict(object):
                     for item in no_chars: 
                         clear_word = clear_word.replace(item, '').lower()
                     # check clear_word in test_dict
-                    if clear_word in test_dict: 
-                        word_in_test = test_dict[clear_word]
+                    if clear_word in self.test_dict: 
+                        word_in_test = self.test_dict[clear_word]
                         total_both_word += 1
                     else:
                         word_in_test = 0
@@ -106,7 +108,7 @@ class Dict(object):
                         self.train_dict[clear_word] = [None,1,word_in_test]
                     new_sentence.append(clear_word)
                 self.train_sentences.append(new_sentence)
-        train_dict.pop('', None)
+        self.train_dict.pop('', None)
         # cut by a self-defined threshold, cutbound
         print('keep all words in test_dict, size='+str(len(self.test_dict)))
         print('filter train_dict by count, lower bound='+str(lb)+' and upper bound='+str(ub))
@@ -117,11 +119,11 @@ class Dict(object):
             else:
                 if (value[1] >= lb)& (value[1] <= ub):
                     self.sort_train_list.append([key, value[1]])
-        self.sort_train_list = sorted(sort_train_list, key = lambda x : x[1], reverse=True)
+        self.sort_train_list = sorted(self.sort_train_list, key = lambda x : x[1], reverse=True)
         self.train_dict = {}
-        for idx, item in enumerate(sort_train_list):
+        for idx, item in enumerate(self.sort_train_list):
             self.train_dict[item[0]] = item[1]
-        print('total train dict size     : %8d' % len(sort_train_list))
+        print('total train dict size     : %8d' % len(self.sort_train_list))
         print('total train_sentences size: %8d' % len(self.train_sentences))
         print('total_train_word          : %8d' % total_train_word)
         print('total_both_word           : %8d' % total_both_word)
@@ -129,9 +131,10 @@ class Dict(object):
         
     def BothDict(self):
         self.both_dict = {}
+        self.both_dict[self.not_in_bag] = [None,0,0]
         for key,value in self.train_dict.items():
             train_count = self.train_dict[key]
-            if key in test_dict:
+            if key in self.test_dict:
                 test_count = self.test_dict[key]
             else:
                 test_count = 0

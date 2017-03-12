@@ -8,20 +8,24 @@
 # Copyright:    (c) cmchang 2017
 # Licence:      <your licence>
 #-------------------------------------------------------------------------------
+import collections
+import random
+import numpy as np
+from Dict import Dict
 
-def generate_batch(selected_sentences,batch_size,window):
-    candidate_sent = selected_sentences
-    if len(candidate_sent):
-        print('at least one sentence in selected_sentences')
-        return
+
+def GenerateBatch(myDict,selected_sentences,batch_size,window):
+    # if len(selected_sentences):
+    #     print('at least one sentence in selected_sentences')
+    #     return
     batch = []
     label = []
     buffer = collections.deque(maxlen=window+1)
     while len(batch) < batch_size:
         data_index = 0 
-        data = candidate_sent[random.randint(0,len(candidate_sent)-1)]
+        data = selected_sentences[random.randint(0,len(selected_sentences)-1)]
         for _ in range(window+1):
-            buffer.append(data[data_index])
+            buffer.append(myDict.GetWordIndex(data[data_index]))
             data_index = (data_index + 1)
         while data_index < len(data):
             # get a sample
@@ -31,6 +35,6 @@ def generate_batch(selected_sentences,batch_size,window):
             if len(batch) >= batch_size:
                 break
             # update buffer and data_index
-            buffer.append(data[data_index])
+            buffer.append(myDict.GetWordIndex(data[data_index]))
             data_index = (data_index + 1)
     return batch,label

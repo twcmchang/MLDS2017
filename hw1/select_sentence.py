@@ -12,6 +12,7 @@
 from Dict import Dict
 import os
 import re
+import pickle
 
 def SelectTrainSentences(big_dict,data_path,c_threshold, word_limit):
     selected_lines = []
