@@ -18,12 +18,13 @@
 ## Directory overview (Jimmy)
 ```
 hw1/
-+-- main.py 
-+-- Dict.py # define class Dict
++-- main.py
++-- Dict.py
 +-- combine_train_sentence.py
++-- generate_batch.py
 +-- select_sentence.py
-+-- Dict_v0311 (import Dict.py, and generated in main.py)
-+-- pickle_sentence_***** (import select_sentence.py, and generated in main.py)
++-- Dict_v0311 (generated in main.py)
++-- pickle_sentence_*** (generated in main.py)
 +-- Data/
 |   +-- train/
 |       +-- *.TXT 
