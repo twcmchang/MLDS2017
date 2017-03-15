@@ -12,7 +12,7 @@
 | Function                | Description |
 | :---------------------- | :---------- |
 | `NCE`                   | 修改 loss function to NCE in main.py |
-
+| `Add argument parser`   | 讓程式好用一些 QQ  |
 
 ### Done but not commited yet
 | Function                | Description |
