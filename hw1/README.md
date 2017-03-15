@@ -11,8 +11,13 @@
 ### Pending:
 | Function                | Description |
 | :---------------------- | :---------- |
-| `Add validation`        | 加入 validation step in main.py |
 | `NCE`                   | 修改 loss function to NCE in main.py |
+
+
+### Done but not commited yet
+| Function                | Description |
+| :---------------------- | :---------- |
+| `Add validation`        | 加入 validation step in main.py |
 | `Output prediction`     | 讀進 testing_data.csv => 預測 => 寫出符合格式的檔案 |
 
 ## Directory overview (Jimmy)
