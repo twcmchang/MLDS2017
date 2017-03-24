@@ -1,11 +1,12 @@
-Put training and testing data into /data/
+
 
 1. Model
-Train a new model with default parameters
+
+Put training data into /data/ and train a new model with default parameters.
 ```
 python train.py
 ```
-Or, download a trained model from https://www.dropbox.com/s/d1lfnv6rhc247me/model.ckpt-80000.zip?dl=0 and put all files into /save/
+The model will be stored in /save/. Or, just download a trained model from https://www.dropbox.com/s/d1lfnv6rhc247me/model.ckpt-80000.zip?dl=0 and put all files into /save/.
 
 2. Generate a result
 ```
