@@ -2,7 +2,7 @@
 
 1. Model
 
-Put training data into /data/ and train a new model with default parameters.
+Put training data into /data/ and train a new model with default parameters:
 ```
 python train.py
 ```
