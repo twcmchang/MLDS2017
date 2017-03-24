@@ -12,7 +12,7 @@ from model import Model
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--save_dir', type=str, default='model-epoch2-80000',
+    parser.add_argument('--save_dir', type=str, default='save',
                        help='model directory to store checkpointed models')
     parser.add_argument('-n', type=int, default=10,
                        help='number of times to sample')
