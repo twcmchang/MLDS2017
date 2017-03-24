@@ -35,6 +35,6 @@ def SelectTrainSentences(big_dict,data_path,c_threshold, word_limit):
     selected_cnt = len(selected_lines)
     '''...write selected sentences...'''
     print('c_threshold %.04lf / Selected Sz %8d / %8d' % (c_threshold, selected_cnt, total_lines))
-    output = open(os.path.join(data_path,'pickle_sentence_%.02f_%d_%08d' % (c_threshold, word_limit, selected_cnt)), 'wb')
+    output = open(os.path.join(data_path,'pickle_sentence_%.02f' % (c_threshold)), 'wb')
     pickle.dump(selected_lines, output)
     output.close()

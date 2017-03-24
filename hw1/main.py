@@ -23,10 +23,15 @@ import tensorflow as tf
 # If there is no existing dictionary and selected sentences, initial = True
 # else, initial = False
 initial = False
+keep_training = True
 
 data_path = "/Users/chunmingchang/MLDS2017/hw1/Data"
+ckpt_meta = "/Users/chunmingchang/MLDS2017/hw1/Data/model/model0.322266.ckpt.meta"
+ckpt_file = "/Users/chunmingchang/MLDS2017/hw1/Data/model/model0.322266.ckpt"
+
 
 print("Initial:",str(initial))
+print("Continue training:",str(keep_training))
 
 if initial:
     # build dictionary
@@ -43,7 +48,7 @@ if initial:
 
     # select training sentences with c_threshold=0.8 and word_limit=10
     # save selected sentences under data_path
-    
+
     SelectTrainSentences(myDict,data_path,0.8,10)
 
     # revised the following filename 
@@ -53,7 +58,7 @@ else:
     # load in binary by pickle
     myDict = pickle.load(open('Dict_v0311','rb'))
     myDict.GetWordIndex('test')
-    selected_sentences = pickle.load(open(os.path.join(data_path,'pickle_sentence_0.80_10_00862361'),'rb'))
+    selected_sentences = pickle.load(open(os.path.join(data_path,'pickle_sentence_0.60'),'rb'))
 
 print("Completed dictionary and selected_sentences ...")
 
@@ -70,17 +75,17 @@ embedding_matrix = dense_to_one_hot(np.array(range(len(myDict.both_dict))),num_c
 
 
 # hyper parameters
-batch_size     = 128
+batch_size     = 1024
 window         = 4 # how many forewords to determine the next words
-learning_rate  = 0.001
-training_iters = 5000000 # upper bound of epoch * batch_size
+learning_rate  = 0.00017
+training_iters = 1000000 # upper bound of epoch * batch_size
 display_epoch  = 50 # display per display_epoch 
 
 # Network Parameters
 n_input   = len(myDict.both_dict) # because of one-hot encoding here
 n_classes = len(myDict.both_dict) # because of one-hot encoding here
 n_steps   = window # how many steps in RNN == window
-n_hidden  = 128 # hidden layer
+n_hidden  = 384 # hidden layer
 
 # tf Graph input
 x = tf.placeholder("float", [None, n_steps, n_input])
@@ -117,7 +122,7 @@ def RNN(x, weight_shape, bias_shape):
     outputs, states = tf.contrib.rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
 
     # Linear activation, using rnn inner loop last output
-    return tf.matmul(outputs[-1], weights) + biases
+    return tf.nn.relu(tf.matmul(outputs[-1], weights) + biases)
 
 
 # In[11]:
@@ -151,6 +156,10 @@ with tf.Session() as sess:
     sess.run(init)
     step = 1
     bestaccu = 0.0
+    if keep_training:
+        saver = tf.train.import_meta_graph(ckpt_meta)
+        saver.restore(sess, ckpt_file)
+        print("Model restored.")
     # Keep training until reach max iterations
     while step * batch_size < training_iters:
         # generate a batch of samples
@@ -177,13 +186,7 @@ with tf.Session() as sess:
         if acc > bestaccu:
             bestaccu = acc
 	    # Save the variables to disk.
-            save_path = saver.save(sess, os.path.join(data_path,"model"+str(acc)+".ckpt"))
+            save_path = saver.save(sess, os.path.join(data_path,"model/model"+str(acc)+".ckpt"))
+            print("Loss: "+ str(loss))
             print("Model saved in file: %s" % save_path)
     print("Optimization Finished!")
-
-#     # Calculate accuracy for 128 mnist test images
-#     test_len = 128
-#     test_data = mnist.test.images[:test_len].reshape((-1, n_steps, n_input))
-#     test_label = mnist.test.labels[:test_len]
-#     print("Testing Accuracy:", \
-#         sess.run(accuracy, feed_dict={x: test_data, y: test_label}))
