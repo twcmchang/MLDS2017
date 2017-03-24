@@ -1,15 +1,24 @@
-Put data into /data/
+Put training and testing data into /data/
 
-Training:
+1. Model
+Train a new model with default parameters
 ```
 python train.py
 ```
+Or, download a trained model from https://www.dropbox.com/s/d1lfnv6rhc247me/model.ckpt-80000.zip?dl=0 and put all files into /save/
 
-Testing:
+2. Generate a result
 ```
 python sample.py
 ```
-Test error on Kaggle is about 0.3 when training loss is about 0.4.
+Make sure that testing data exists in /data/ and model files exist in /save/
+
+3. Tuning
+Vocabulary size (train.py)
+Number of LSTM layers (train.py)
+Length of sequences (train.py)
+Dropout (train.py)
+Consider next words while predicting (sample.py)
 
 
 Reuse the codes from
