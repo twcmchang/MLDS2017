@@ -29,7 +29,7 @@ def main():
                        help='minibatch size')
     parser.add_argument('--seq_length', type=int, default=25,
                        help='RNN sequence length')
-    parser.add_argument('--max_vocab_size', type=int, default=20000,
+    parser.add_argument('--max_vocab_size', type=int, default=15000,
                        help='Maximum vocabulary size')
     parser.add_argument('--num_epochs', type=int, default=3,
                        help='number of epochs')
