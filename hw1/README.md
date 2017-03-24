@@ -15,11 +15,17 @@ python sample.py
 Make sure that testing data exists in /data/ and model files exist in /save/
 
 3. Tuning
+
 Vocabulary size (train.py)
+
 Number of LSTM layers (train.py)
+
 Length of sequences (train.py)
+
 Dropout (train.py)
+
 Consider next words while predicting (sample.py)
+
 
 
 Reuse the codes from
