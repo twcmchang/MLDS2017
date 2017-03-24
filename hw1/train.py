@@ -15,14 +15,13 @@ def main():
     parser.add_argument('--data_dir', type=str, default='data/Holmes_Training_Data',
                        help='data directory containing input.txt')
                        # 'data/Holmes_Training_Data'
-                       # 'data/tinyshakespeare'
     parser.add_argument('--log_dir', type=str, default='logs',
                        help='directory containing tensorboard logs')
     parser.add_argument('--save_dir', type=str, default='save',
                        help='directory to store checkpointed models')
     parser.add_argument('--rnn_size', type=int, default=256,
                        help='size of RNN hidden state')
-    parser.add_argument('--num_layers', type=int, default=2,
+    parser.add_argument('--num_layers', type=int, default=1,
                        help='number of layers in the RNN')
     parser.add_argument('--model', type=str, default='lstm',
                        help='rnn, gru, or lstm')
