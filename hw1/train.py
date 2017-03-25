@@ -41,9 +41,9 @@ def main():
                        help='learning rate')
     parser.add_argument('--decay_rate', type=float, default=0.97,
                        help='decay rate for rmsprop')
-    parser.add_argument('--output_keep_prob', type=float, default=1,
+    parser.add_argument('--output_keep_prob', type=float, default=1.0,
                         help='probability of keeping weights in the hidden layer')
-    parser.add_argument('--input_keep_prob', type=float, default=1,
+    parser.add_argument('--input_keep_prob', type=float, default=1.0,
                         help='probability of keeping weights in the input layer')
     parser.add_argument('--gpu_mem', type=float, default=0.800,
                        help='% of gpu memory to be allocated to this process. Default is 66.6%')
