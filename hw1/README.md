@@ -18,9 +18,13 @@ python sample.py
 Make sure that testing data exists in /data/ and model files exist in /save/
 
 # Performance
-master model: 0.39615
+Master model (baseline): 0.39615
+
   setting: One LSTM layer trained 80000 batches with batch size = 50, vocabulary size = 40000, and sequence length = 25. Use max sampling. 
-best model :
+
+Best model :
+
+
 
 # Tuning
 
