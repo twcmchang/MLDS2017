@@ -67,7 +67,7 @@ class Model():
                 #inputs = tf.split(tf.nn.embedding_lookup(embedding, self.input_data),
                 #                  args.seq_length, 1)
                 inputs = tf.nn.embedding_lookup(embedding, self.input_data)
-                if not infer and args.output_keep_prob:
+                if not infer and args.output_keep_prob < 1.0:
                     inputs = tf.nn.dropout(inputs, args.output_keep_prob)
                 inputs = tf.split(inputs, args.seq_length, 1)                
                 inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
