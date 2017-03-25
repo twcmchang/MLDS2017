@@ -1,4 +1,7 @@
-
+# Quick start
+```
+bash run.sh ./data/testing_data.csv result.csv
+```
 
 # Model
 
