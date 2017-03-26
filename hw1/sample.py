@@ -16,16 +16,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--save_dir', type=str, default='save',
                        help='model directory to store checkpointed models')
-    #parser.add_argument('-n', type=int, default=50,
-    #                   help='number of times to sample')
     parser.add_argument('--test_file', type=str, default='data/testing_data.csv',
                        help='test file')
     parser.add_argument('--result_file', type=str, default='result.csv',
                        help='result file')
     parser.add_argument('--next_word', type=bool, default=False,
                        help='wheather to consider next word as predicting')
-    #parser.add_argument('--sample', type=int, default=0,
-    #                   help='0 to use max at each timestep, 1 to sample at each timestep, 2 to sample on spaces')
 
     args = parser.parse_args()
     sample(args)
