@@ -31,7 +31,7 @@ def main():
                        help='RNN sequence length')
     parser.add_argument('--max_vocab_size', type=int, default=40000,
                        help='Maximum vocabulary size')
-    parser.add_argument('--num_epochs', type=int, default=3,
+    parser.add_argument('--num_epochs', type=int, default=2,
                        help='number of epochs')
     parser.add_argument('--save_every', type=int, default=5000,
                        help='save frequency')
