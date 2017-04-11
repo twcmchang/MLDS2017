@@ -3,18 +3,29 @@
 - Download [dataset][dataset] and unzip it into hw2/
 - Tensorflow r1.0
 
-## How to use
-### First, train a new model with default setting: 
+## Train a video caption generator with default setting: 
 ```
 python train.py
 ```
+| Parameter      | Default | 
+| :------------- | ------: | 
+| ```n_lstm_step```   | 80 |
+| ```n_video_step```  | 80 |
+| ```n_caption_step```| 20 |
+| ```dim_hidden```    | 1000 |
+| ```dim_image```     | 4096 |
+| ```n_epoch```       | 1000 |
+| ```batch_size```    | 50 |
+| ```learning_rate``` | .001 |
+| ```grad_clip```     | 10|
+
 After training, model/checkpoint will be stored in a specfic direcotry (default: save/).
 
-### Second, test the saved model in a specific directory (default: save/).
+## Test your video caption generator model:
 ```
 python test.py
 ```
-The output file 'output.json' will be generated.
+'output.json' will be generated
 
 ## Resources
 https://github.com/chenxinpeng/S2VT
