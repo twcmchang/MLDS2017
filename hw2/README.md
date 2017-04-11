@@ -4,11 +4,17 @@
 - Tensorflow r1.0
 
 ## How to use
-First, train a new model with default setting: 
+### First, train a new model with default setting: 
 ```
 python train.py
 ```
-Second, work on testing now (2017/04/10)
+After training, model/checkpoint will be stored in a specfic direcotry (default: save/).
+
+### Second, test the saved model in a specific directory (default: save/).
+```
+python test.py
+```
+The output file 'output.json' will be generated.
 
 ## Resources
 https://github.com/chenxinpeng/S2VT
