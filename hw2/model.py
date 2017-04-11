@@ -109,12 +109,12 @@ class Video_Caption_Generator():
 			# self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.tf_loss)
 
 		else: # infer == True
-			self.video = tf.placeholder(tf.float32, [1, self.n_video_lstm_step, self.dim_image])
-			self.video_mask = tf.placeholder(tf.float32, [1, self.n_video_lstm_step])
+			self.video = tf.placeholder(tf.float32, [1, self.n_video_step, self.dim_image])
+			self.video_mask = tf.placeholder(tf.float32, [1, self.n_video_step])
 
-			video_flat = tf.reshape(video, [-1, self.dim_image])
-			image_emb = tf.nn.xw_plus_b(video_flat, self.encode_image_W, self.encode_image_b)
-			image_emb = tf.reshape(image_emb, [1, self.n_video_lstm_step, self.dim_hidden])
+			video_flat = tf.reshape(self.video, [-1, self.dim_image])
+			image_embed = tf.nn.xw_plus_b(video_flat, self.embed_image_W, self.embed_image_b)
+			image_embed = tf.reshape(image_embed, [1, self.n_video_step, self.dim_hidden])
 
 			state1 = tf.zeros([1, self.lstm1.state_size])
 			state2 = tf.zeros([1, self.lstm2.state_size])
@@ -138,12 +138,11 @@ class Video_Caption_Generator():
 						output2, state2 = self.lstm2(tf.concat([padding, output1],1), state2)
 
 			for i in range(0, self.n_caption_step):
-
 				if i == 0:
 					# For testing, here the first word of caption must be <BOS>, 
 					# <BOS> is defined at the index of 0 in function build_word_vocabuary in utils.py.	
 					with tf.device("/cpu:0"):
-						current_word_embed = tf.nn.embedding_lookup(self.Wemb, tf.zeros([0],dtype=tf.int32))
+						current_word_embed = tf.nn.embedding_lookup(self.Wemb, tf.zeros([1],dtype=tf.int64))
 
 				with tf.variable_scope("LSTM1",reuse=True):
 					output1, state1 = self.lstm1(padding, state1)
@@ -151,15 +150,16 @@ class Video_Caption_Generator():
 					output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
 
 				logits = tf.nn.xw_plus_b( output2, self.embed_word_W, self.embed_word_b)
-				max_prob_index = tf.argmax(logits, 1)[0]
+				probs = tf.nn.softmax(logits)
+				max_prob_index = tf.argmax(probs, 1)[0]
 				gen_caption_idx.append(max_prob_index)
-				pred_probs.append(logits)
+				pred_probs.append(probs)
 
 				# update current_word_embed
 				with tf.device("/cpu:0"):
 					current_word_embed = tf.nn.embedding_lookup(self.Wemb, max_prob_index)
-					# current_word_embed = tf.expand_dims(current_word_embed, 0)
-				embeds.append(current_embed)
+					current_word_embed = tf.expand_dims(current_word_embed, 0)
+				embeds.append(current_word_embed)
 
 			self.gen_caption_idx = gen_caption_idx
 			self.pred_probs = pred_probs
