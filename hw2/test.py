@@ -18,7 +18,7 @@ def main():
 	parser.add_argument('--train_label_json', type=str, default='MLDS_hw2_data/training_label.json',
 						help='json file of training captions and corresponding video id')
 	parser.add_argument('--test_label_json', type=str, default='MLDS_hw2_data/testing_public_label.json',
-						help='json file of testing captions and corresponding video id'))
+						help='json file of testing captions and corresponding video id')
 	parser.add_argument('--result_file', type=str, default='output.json',
 						help='result file')
 	parser.add_argument('--init_from', type=str, default='save',
@@ -27,10 +27,9 @@ def main():
 						'checkpoint'	: paths to model file(s) (created by tf).
 										Note: this file contains absolute paths, be careful when moving files around;
 						'model.ckpt-*'	: file(s) with model definition (created by tf)
-						"""))
-
-    args = parser.parse_args()
-    test(args)
+						""")
+	args = parser.parse_args()
+	test(args)
 
 def test(args):
 
@@ -43,7 +42,7 @@ def test(args):
 
 	vocab, vocab_inv, train_feat_id, train_caption, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
 
-	model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=True)
+	model = Video_Caption_Generator(saved_args,n_vocab=len(vocab),infer=True)
 	
 	with tf.Session() as sess:
 
@@ -60,22 +59,29 @@ def test(args):
 			this_test_feat_id = test_feat_id[i]
 				
 			# get vdieo features
-			current_feat, current_feat_mask = get_video_feat(args.test_video_feat_path, this_test_feat_id)
-
-			# randomly select one captions for one video and get padding captions with maxlen = 20
-			# current_caption, current_caption_mask = get_padding_caption(vocab, batch_caption, maxlen= model.n_caption_step+1)
+			# notes: the second argument to get_video_feat must be np.array
+			current_feat, current_feat_mask = get_video_feat(args.test_video_feat_path, np.array([this_test_feat_id]))
 
 			this_gen_idx = sess.run([model.gen_caption_idx],feed_dict={
 										model.video: current_feat,
 										model.video_mask : current_feat_mask,
 										})
-			this_gen_words = vocab_inv(this_gen_idx)
-			punctuation = np.argmax(np.array(this_gen_words) == '<eos>') + 1
-			this_gen_words = this_gen_words[:punctuation]
+
+			this_gen_idx = this_gen_idx[0]
+			this_gen_words = []
+
+			for k in range(len(this_gen_idx)):
+				this_gen_words.append(vocab_inv.get(this_gen_idx[k],'<PAD>'))
+
+			this_gen_words = np.array(this_gen_words)
+			punctuation = np.argmax(this_gen_words == '<EOS>') + 1
+			
+			if punctuation > 1:
+				this_gen_words = this_gen_words[:punctuation]
 
 			this_caption = ' '.join(this_gen_words)
-			this_caption = this_caption.replace('<bos> ', '')
-			this_caption = this_caption.replace(' <eos>', '')
+			this_caption = this_caption.replace('<BOS> ', '')
+			this_caption = this_caption.replace(' <EOS>', '')
 
 			this_answer = {}
 			this_answer['caption'] = this_caption
@@ -86,9 +92,7 @@ def test(args):
 			result.append(this_answer)
 
 		with open(args.result_file, 'w') as fout:
-    		json.dump(result, fout)
+			json.dump(result, fout)
 
 if __name__ == '__main__':
-    main()
-
-
+	main()
