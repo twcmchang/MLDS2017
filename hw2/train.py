@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import argparse
+from six.moves import cPickle
 from model import Video_Caption_Generator
 from utils import data_preprocess, get_video_feat, get_padding_caption
 
