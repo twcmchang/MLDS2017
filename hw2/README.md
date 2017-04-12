@@ -7,10 +7,10 @@
 ```
 python train.py
 ```
-|Network parameter| ```n_lstm_step``` | ```n_video_step``` | ```n_caption_step``` | ```dim_image``` | ```dim_hidden``` |
+|**Network parameter**| **```n_lstm_step```** | **```n_video_step```** | **```n_caption_step```** | **```dim_image```** | **```dim_hidden```** |
 |:-------:|:----:|:----:|:----:|:----:|:----:|
 |Default  |  80  |  80  |  20  | 4096 | 1000 |
-|Training parameter | ```n_epoch``` | ```batch_size``` | ```learning_rate``` | ```grad_clip``` ||
+|**Training parameter** | **```n_epoch```** | **```batch_size```** | **```learning_rate```** | **```grad_clip```** ||
 |Default | 1000 |  50  | .001 |  10  ||
 
 <!---
@@ -35,11 +35,10 @@ python test.py
 ```
 'output.json' will be generated
 
-## Evaluation average BLEU score
+## Evaluate the average BLEU score
 ```
 python eval.py
 ```
-
 
 ## Resources
 https://github.com/chenxinpeng/S2VT
