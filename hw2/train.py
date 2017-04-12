@@ -115,7 +115,7 @@ def train(args):
 				current_caption, current_caption_mask = get_padding_caption(vocab, batch_caption, maxlen= model.n_caption_step+1)
 
 				# run train_op to optimizer tf_loss
-				_, loss_val = sess.run([model.gen_caption_idx, model.pred_prob],feed_dict={
+				_, loss_val = sess.run([model.train_op, model.tf_loss],feed_dict={
 							model.video: current_feat,
 							model.video_mask : current_feat_mask,
 							model.caption: current_caption,
