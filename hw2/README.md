@@ -7,8 +7,17 @@
 ```
 python train.py
 ```
-| Parameter      | Default | 
-| :------------- | ------: | 
+|Parameter| ```n_lstm_step``` | ```n_video_step``` | ```n_caption_step``` | ```dim_image``` | ```dim_hidden``` |
+|:-------:|:----:|:----:|:----:|:----:|:----:|
+|Default  |  80  |  80  |  20  | 4096 | 1000 |
+
+|Parameter| ```n_epoch``` | ```batch_size``` | ```learning_rate``` | ```grad_clip``` |
+|:-------:|:----:|:----:|:----:|:----:|
+|Default  | 1000 |  50  | .001 |  10  |
+
+<!---
+| Parameter      | Default |
+| :------------- | ------: |
 | ```n_lstm_step```   | 80 |
 | ```n_video_step```  | 80 |
 | ```n_caption_step```| 20 |
@@ -18,6 +27,7 @@ python train.py
 | ```batch_size```    | 50 |
 | ```learning_rate``` | .001 |
 | ```grad_clip```     | 10|
+--->
 
 After training, model/checkpoint will be stored in a specfic direcotry (default: save/).
 
@@ -26,6 +36,12 @@ After training, model/checkpoint will be stored in a specfic direcotry (default:
 python test.py
 ```
 'output.json' will be generated
+
+## Evaluation average BLEU score
+```
+python eval.py
+```
+
 
 ## Resources
 https://github.com/chenxinpeng/S2VT
