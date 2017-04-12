@@ -7,13 +7,11 @@
 ```
 python train.py
 ```
-|Parameter| ```n_lstm_step``` | ```n_video_step``` | ```n_caption_step``` | ```dim_image``` | ```dim_hidden``` |
+|Network parameter| ```n_lstm_step``` | ```n_video_step``` | ```n_caption_step``` | ```dim_image``` | ```dim_hidden``` |
 |:-------:|:----:|:----:|:----:|:----:|:----:|
 |Default  |  80  |  80  |  20  | 4096 | 1000 |
-
-|Parameter| ```n_epoch``` | ```batch_size``` | ```learning_rate``` | ```grad_clip``` |
-|:-------:|:----:|:----:|:----:|:----:|
-|Default  | 1000 |  50  | .001 |  10  |
+|Training parameter | ```n_epoch``` | ```batch_size``` | ```learning_rate``` | ```grad_clip``` ||
+|Default | 1000 |  50  | .001 |  10  ||
 
 <!---
 | Parameter      | Default |
