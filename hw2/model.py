@@ -13,25 +13,33 @@ class Video_Caption_Generator():
 		self.learning_rate	= args.learning_rate
 		self.grad_clip		= args.grad_clip
 		self.n_vocab 		= n_vocab
-
-		# model components
-		# two LSTM layers
-		# word embedding for input
-		with tf.device("/cpu:0"):
-			self.Wemb = tf.Variable(tf.random_uniform([self.n_vocab, self.dim_hidden],-0.1,0.1), name="Wemb")
-	
-		self.lstm1 = tf.contrib.rnn.BasicLSTMCell(self.dim_hidden, state_is_tuple=False)
-		self.lstm2 = tf.contrib.rnn.BasicLSTMCell(self.dim_hidden, state_is_tuple=False)
-
-		# image embedding
-		self.embed_image_W = tf.Variable(tf.random_uniform([self.dim_image, self.dim_hidden],-0.1,0.1), name="embed_image_W")
-		self.embed_image_b = tf.Variable(tf.zeros([self.dim_hidden]), name="embed_image_b")
-
-		# word embedding for output
-		self.embed_word_W  = tf.Variable(tf.random_uniform([self.dim_hidden,self.n_vocab],-0.1,0.1), name="embed_word_W")
-		self.embed_word_b  = tf.Variable(tf.zeros([self.n_vocab]), name="embed_word_b")
-
+		
 		if infer == False:
+			# model components
+			# two LSTM layers
+			# word embedding for input
+			with tf.device("/cpu:0"):
+				self.Wemb = tf.Variable(tf.random_uniform([self.n_vocab, self.dim_hidden],-0.1,0.1), name="Wemb")
+
+			self.lstm1 = tf.contrib.rnn.BasicLSTMCell(self.dim_hidden, state_is_tuple=False)
+			self.lstm2 = tf.contrib.rnn.BasicLSTMCell(self.dim_hidden, state_is_tuple=False)
+
+			# image embedding
+			# self.embed_image_W = tf.Variable(tf.random_uniform([self.dim_image, self.dim_hidden],-0.1,0.1), name="embed_image_W")
+			# self.embed_image_b = tf.Variable(tf.zeros([self.dim_hidden]), name="embed_image_b")
+
+			self.embed_image_W = tf.get_variable("embed_image_W", [self.dim_image,self.dim_hidden])
+			self.embed_image_b = tf.get_variable("embed_image_b", [self.dim_hidden])
+
+
+			# word embedding for output
+			# self.embed_word_W  = tf.Variable(tf.random_uniform([self.dim_hidden,self.n_vocab],-0.1,0.1), name="embed_word_W")
+			# self.embed_word_b  = tf.Variable(tf.zeros([self.n_vocab]), name="embed_word_b")
+
+			self.embed_word_W = tf.get_variable("embed_word_W", [self.dim_hidden,self.n_vocab])
+			self.embed_word_b = tf.get_variable("embed_word_b", [self.n_vocab])
+
+		
 			# input
 			self.video = tf.placeholder(tf.float32, [self.batch_size, self.n_video_step, self.dim_image])
 			self.video_mask = tf.placeholder(tf.float32, [self.batch_size, self.n_video_step])
