@@ -47,6 +47,7 @@ def main():
 	parser.add_argument('--init_from', type=str, default=None,
 						help="""continue training from saved model at this path. Path must contain files saved by previous training process:
 						    'config.pkl'        : configuration;
+						    'vocab.pkl'			: vocabuary;
 						    'checkpoint'        : paths to model file(s) (created by tf).
 						                          Note: this file contains absolute paths, be careful when moving files around;
 						    'model.ckpt-*'      : file(s) with model definition (created by tf)
@@ -73,6 +74,10 @@ def train(args):
 		cPickle.dump(args, f)
 
 	vocab, vocab_inv, train_feat_id, train_caption, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
+
+	print(vocab_inv[359])
+	with open(os.path.join(args.save_dir, 'vocab.pkl'), 'wb') as f:
+		cPickle.dump(vocab, f)
 
 	model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
 	

@@ -38,9 +38,16 @@ def test(args):
 	with open(os.path.join(args.init_from, 'config.pkl'), 'rb') as f:
 		saved_args = cPickle.load(f)
 
-	ckpt = tf.train.get_checkpoint_state(args.init_from)
+	with open(os.path.join(args.init_from, 'vocab.pkl'), 'rb') as f:
+		vocab = cPickle.load(f)
 
-	vocab, vocab_inv, train_feat_id, train_caption, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
+	vocab_inv = {v:k for k, v in vocab.items()}
+
+	print(saved_args)
+
+	_, _, _, _, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
+
+	print(vocab_inv[359])
 
 	model = Video_Caption_Generator(saved_args,n_vocab=len(vocab),infer=True)
 	
@@ -50,35 +57,43 @@ def test(args):
 		print("Initialized")
 		
 		saver = tf.train.Saver(tf.global_variables())
-		if args.init_from is not None:
+		ckpt = tf.train.get_checkpoint_state(args.init_from)
+
+		if ckpt and ckpt.model_checkpoint_path: # args.init_from is not None:
 			saver.restore(sess, ckpt.model_checkpoint_path)
 			print("Model restored %s" % ckpt.model_checkpoint_path)
 
 		result = []
 
-		for i in range(len(test_feat_id)):
+		for i in range(1):#range(len(test_feat_id)):
 			this_test_feat_id = test_feat_id[i]
-				
+
 			# get vdieo features
 			# notes: the second argument to get_video_feat must be np.array
 			current_feat, current_feat_mask = get_video_feat(args.test_video_feat_path, np.array([this_test_feat_id]))
 
-			this_gen_idx = sess.run([model.gen_caption_idx],feed_dict={
+			this_gen_idx, probs = sess.run([model.gen_caption_idx,model.pred_probs],feed_dict={
 										model.video: current_feat,
 										model.video_mask : current_feat_mask,
 										})
-
-			this_gen_idx = this_gen_idx[0]
+			# print(this_gen_idx)
+			# argm = np.argmax(probs[0])	
+			# print(len(probs))			
+			# print(np.argmax(probs[0]))
+			# print(vocab_inv[argm])
 			this_gen_words = []
 
 			for k in range(len(this_gen_idx)):
 				this_gen_words.append(vocab_inv.get(this_gen_idx[k],'<PAD>'))
 
 			this_gen_words = np.array(this_gen_words)
+
 			punctuation = np.argmax(this_gen_words == '<EOS>') + 1
 			
 			if punctuation > 1:
 				this_gen_words = this_gen_words[:punctuation]
+
+			print(this_gen_words)
 
 			this_caption = ' '.join(this_gen_words)
 			this_caption = this_caption.replace('<BOS> ', '')
