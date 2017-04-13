@@ -52,6 +52,7 @@ def test(args):
 		saver = tf.train.Saver(tf.global_variables())
 		if args.init_from is not None:
 			saver.restore(sess, ckpt.model_checkpoint_path)
+			print("Model restored %s" % ckpt.model_checkpoint_path)
 
 		result = []
 
