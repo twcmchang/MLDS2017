@@ -32,7 +32,7 @@ def main():
 						help='number of caption steps')
 	parser.add_argument('--n_epoch', type=int, default=1000,
 						help='number of epochs')
-	parser.add_argument('--batch_size', type=int, default=50,
+	parser.add_argument('--batch_size', type=int, default=2,
 						help='minibatch size')
 	parser.add_argument('--save_every', type=int, default=10,
 						help='save frequency')
@@ -103,10 +103,10 @@ def train(args):
 
 			loss_to_draw_epoch = []
 
-			for start, end in zip(
-					range(0, len(epoch_train_feat_id), model.batch_size),
-					range(model.batch_size, len(epoch_train_feat_id), model.batch_size)):
-
+			# for start, end in zip(
+			# 		range(0, len(epoch_train_feat_id), model.batch_size),
+			# 		range(model.batch_size, len(epoch_train_feat_id), model.batch_size)):
+			for start,end in zip(range(0,2,2),range(2,4,2)):
 				start_time = time.time()
 
 				# get one minibatch
@@ -120,7 +120,7 @@ def train(args):
 				current_caption, current_caption_mask = get_padding_caption(vocab, batch_caption, maxlen= model.n_caption_step+1)
 
 				# run train_op to optimizer tf_loss
-				_, loss_val = sess.run([model.train_op, model.tf_loss],feed_dict={
+				_, loss_val= sess.run([model.train_op, model.tf_loss],feed_dict={
 							model.video: current_feat,
 							model.video_mask : current_feat_mask,
 							model.caption: current_caption,

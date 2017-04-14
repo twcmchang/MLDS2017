@@ -89,23 +89,22 @@ class Video_Caption_Generator():
 				with tf.variable_scope("LSTM2",reuse=True):
 					output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
 
-				### Step 4: calculate loss ### 
-				# create answer 
-				answer_index_in_vocab = self.caption[:,i+1]
-				answer_index_in_vocab = tf.expand_dims(answer_index_in_vocab, 1)
-				batch_index	= tf.expand_dims(tf.range(0, self.batch_size, 1), 1)
-				sparse_mat 	= tf.concat([batch_index, answer_index_in_vocab], 1)
-				answer_in_onehot = tf.sparse_to_dense(sparse_mat, np.asarray([self.batch_size, self.n_vocab]), 1.0, 0.0)
+					### Step 4: calculate loss ### 
+					# create answer 
+					answer_index_in_vocab = self.caption[:,i+1]
+					answer_index_in_vocab = tf.expand_dims(answer_index_in_vocab, 1)
+					batch_index	= tf.expand_dims(tf.range(0, self.batch_size, 1), 1)
+					sparse_mat 	= tf.concat([batch_index, answer_index_in_vocab], 1)
+					answer_in_onehot = tf.sparse_to_dense(sparse_mat, np.asarray([self.batch_size, self.n_vocab]), 1.0, 0.0)
 
-				# acquire output
-				logits = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
-				cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=answer_in_onehot)
-				cross_entropy = cross_entropy * self.caption_mask[:,i]
+					# acquire output
+					logits = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
+					cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=answer_in_onehot)
+					cross_entropy = cross_entropy * self.caption_mask[:,i]
 
-				pred_probs.append(logits)
-
-				this_loss = tf.reduce_sum(cross_entropy)/self.batch_size
-				loss = loss + this_loss
+					pred_probs.append(logits)
+					this_loss = tf.reduce_mean(cross_entropy)
+					loss = loss + this_loss
 
 			self.tf_loss = loss
 			self.tf_probs = pred_probs
@@ -128,7 +127,6 @@ class Video_Caption_Generator():
 			state2 = tf.zeros([1, self.lstm2.state_size])
 			padding = tf.zeros([1, self.dim_hidden])
 
-			print(state1)
 			gen_caption_idx = []
 
 			pred_probs = []
@@ -158,11 +156,11 @@ class Video_Caption_Generator():
 				with tf.variable_scope("LSTM2",reuse=True):
 					output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
 
-				logits = tf.nn.xw_plus_b( output2, self.embed_word_W, self.embed_word_b)
-				probs = tf.nn.softmax(logits)
-				max_prob_index = tf.argmax(logits, 1)[0]
-				gen_caption_idx.append(max_prob_index)
-				pred_probs.append(probs)
+					logits = tf.nn.xw_plus_b( output2, self.embed_word_W, self.embed_word_b)
+					probs = tf.nn.softmax(logits)
+					max_prob_index = tf.argmax(logits, 1)[0]
+					gen_caption_idx.append(max_prob_index)
+					pred_probs.append(probs)
 
 				# update current_word_embed
 				with tf.device("/cpu:0"):

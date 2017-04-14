@@ -53,7 +53,7 @@ def test(args):
 	
 	with tf.Session() as sess:
 		result = []
-		for i in range(10,12):#range(len(test_feat_id)):
+		for i in range(len(test_feat_id)):
 			tf.global_variables_initializer().run()
 			saver = tf.train.Saver()
 			ckpt = tf.train.get_checkpoint_state(args.init_from)
@@ -67,15 +67,10 @@ def test(args):
 			
 			this_test_feat_id = test_feat_id[i]
 
-			print(test_feat_id)
 			# get vdieo features
 			# notes: the second argument to get_video_feat must be np.array
 			current_feat, current_feat_mask = get_video_feat(args.test_video_feat_path, np.array([this_test_feat_id]))
-			# current_feat, current_feat_mask = get_video_feat(args.test_video_feat_path, np.array(test_feat_id))
-			print(current_feat)
-			print(current_feat_mask)
-			print(current_feat.shape)
-
+			
 			this_gen_idx, probs = sess.run([model.gen_caption_idx,model.pred_probs],feed_dict={
 										model.video: current_feat,
 										model.video_mask : current_feat_mask
