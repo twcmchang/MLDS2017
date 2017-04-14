@@ -128,6 +128,7 @@ class Video_Caption_Generator():
 			state2 = tf.zeros([1, self.lstm2.state_size])
 			padding = tf.zeros([1, self.dim_hidden])
 
+			print(state1)
 			gen_caption_idx = []
 
 			pred_probs = []

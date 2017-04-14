@@ -52,31 +52,35 @@ def test(args):
 	model = Video_Caption_Generator(saved_args,n_vocab=len(vocab),infer=True)
 	
 	with tf.Session() as sess:
-
-		tf.global_variables_initializer().run()
-		print("Initialized")
-		
-		saver = tf.train.Saver(tf.global_variables())
-		ckpt = tf.train.get_checkpoint_state(args.init_from)
-
-		if ckpt and ckpt.model_checkpoint_path: # args.init_from is not None:
-			saver.restore(sess, ckpt.model_checkpoint_path)
-			print("Model restored %s" % ckpt.model_checkpoint_path)
-
 		result = []
+		for i in range(10,12):#range(len(test_feat_id)):
+			tf.global_variables_initializer().run()
+			saver = tf.train.Saver()
+			ckpt = tf.train.get_checkpoint_state(args.init_from)
 
-		for i in range(1):#range(len(test_feat_id)):
+			if ckpt and ckpt.model_checkpoint_path: # args.init_from is not None:
+				saver.restore(sess, ckpt.model_checkpoint_path)
+				print("Model restored %s" % ckpt.model_checkpoint_path)
+			sess.run(tf.global_variables())
+			# 
+			print("Initialized")
+			
 			this_test_feat_id = test_feat_id[i]
 
+			print(test_feat_id)
 			# get vdieo features
 			# notes: the second argument to get_video_feat must be np.array
 			current_feat, current_feat_mask = get_video_feat(args.test_video_feat_path, np.array([this_test_feat_id]))
+			# current_feat, current_feat_mask = get_video_feat(args.test_video_feat_path, np.array(test_feat_id))
+			print(current_feat)
+			print(current_feat_mask)
+			print(current_feat.shape)
 
 			this_gen_idx, probs = sess.run([model.gen_caption_idx,model.pred_probs],feed_dict={
 										model.video: current_feat,
-										model.video_mask : current_feat_mask,
+										model.video_mask : current_feat_mask
 										})
-			# print(this_gen_idx)
+			print(this_gen_idx)
 			# argm = np.argmax(probs[0])	
 			# print(len(probs))			
 			# print(np.argmax(probs[0]))
@@ -85,6 +89,7 @@ def test(args):
 
 			for k in range(len(this_gen_idx)):
 				this_gen_words.append(vocab_inv.get(this_gen_idx[k],'<PAD>'))
+
 
 			this_gen_words = np.array(this_gen_words)
 

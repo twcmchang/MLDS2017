@@ -134,6 +134,7 @@ def get_video_feat(feat_path, batch_video_id):
 	feature_mask = []
 	for i in range(len(batch_video_id)):
 		fn = os.path.join(feat_path, batch_video_id[i]+'.npy')
+		print(fn)
 		if os.path.exists(fn):
 			d = np.load(fn)
 			feature.append(d)
