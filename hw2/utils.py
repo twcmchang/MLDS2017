@@ -6,7 +6,7 @@ import random
 
 def clean_str(string):
 	string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
-	string = re.sub(r"\'s", " is", string)
+	#string = re.sub(r"\'s", " is", string)
 	string = re.sub(r"\'ve", " have", string)
 	string = re.sub(r"n\'t", " not", string)
 	string = re.sub(r"\'re", " are", string)
@@ -134,7 +134,6 @@ def get_video_feat(feat_path, batch_video_id):
 	feature_mask = []
 	for i in range(len(batch_video_id)):
 		fn = os.path.join(feat_path, batch_video_id[i]+'.npy')
-		print(fn)
 		if os.path.exists(fn):
 			d = np.load(fn)
 			feature.append(d)
