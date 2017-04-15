@@ -25,19 +25,19 @@ class Video_Caption_Generator():
 		self.lstm2 = tf.contrib.rnn.BasicLSTMCell(self.dim_hidden, state_is_tuple=False)
 
 		# image embedding
-		# self.embed_image_W = tf.Variable(tf.random_uniform([self.dim_image, self.dim_hidden],-0.1,0.1), name="embed_image_W")
-		# self.embed_image_b = tf.Variable(tf.zeros([self.dim_hidden]), name="embed_image_b")
+		self.embed_image_W = tf.Variable(tf.random_uniform([self.dim_image, self.dim_hidden],-0.1,0.1), name="embed_image_W")
+		self.embed_image_b = tf.Variable(tf.zeros([self.dim_hidden]), name="embed_image_b")
 
-		self.embed_image_W = tf.get_variable("embed_image_W", [self.dim_image,self.dim_hidden])
-		self.embed_image_b = tf.get_variable("embed_image_b", [self.dim_hidden])
+		# self.embed_image_W = tf.get_variable("embed_image_W", [self.dim_image,self.dim_hidden])
+		# self.embed_image_b = tf.get_variable("embed_image_b", [self.dim_hidden])
 
 
 		# word embedding for output
-		# self.embed_word_W  = tf.Variable(tf.random_uniform([self.dim_hidden,self.n_vocab],-0.1,0.1), name="embed_word_W")
-		# self.embed_word_b  = tf.Variable(tf.zeros([self.n_vocab]), name="embed_word_b")
+		self.embed_word_W  = tf.Variable(tf.random_uniform([self.dim_hidden,self.n_vocab],-0.1,0.1), name="embed_word_W")
+		self.embed_word_b  = tf.Variable(tf.zeros([self.n_vocab]), name="embed_word_b")
 
-		self.embed_word_W = tf.get_variable("embed_word_W", [self.dim_hidden,self.n_vocab])
-		self.embed_word_b = tf.get_variable("embed_word_b", [self.n_vocab])
+		# self.embed_word_W = tf.get_variable("embed_word_W", [self.dim_hidden,self.n_vocab])
+		# self.embed_word_b = tf.get_variable("embed_word_b", [self.n_vocab])
 
 		if infer == False:
 			# input
@@ -95,7 +95,7 @@ class Video_Caption_Generator():
 					answer_index_in_vocab = tf.expand_dims(answer_index_in_vocab, 1)
 					batch_index	= tf.expand_dims(tf.range(0, self.batch_size, 1), 1)
 					sparse_mat 	= tf.concat([batch_index, answer_index_in_vocab], 1)
-					answer_in_onehot = tf.sparse_to_dense(sparse_mat, np.asarray([self.batch_size, self.n_vocab]), 1.0, 0.0)
+					answer_in_onehot = tf.sparse_to_dense(sparse_mat, tf.stack([self.batch_size, self.n_vocab]), 1.0, 0.0)
 
 					# acquire output
 					logits = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
@@ -110,10 +110,10 @@ class Video_Caption_Generator():
 			self.tf_probs = pred_probs
 
 			tvars = tf.trainable_variables()
-			grads, _ = tf.clip_by_global_norm(tf.gradients(self.tf_loss, tvars), clip_norm = self.grad_clip)
-			optimizer = tf.train.AdamOptimizer(self.learning_rate)
-			self.train_op = optimizer.apply_gradients(zip(grads, tvars))
-			# self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.tf_loss)
+			# grads, _ = tf.clip_by_global_norm(tf.gradients(self.tf_loss, tvars), clip_norm = self.grad_clip)
+			# optimizer = tf.train.AdamOptimizer(self.learning_rate)
+			# self.train_op = optimizer.apply_gradients(zip(grads, tvars))
+			self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.tf_loss)
 
 		else: # infer == True
 			self.video = tf.placeholder(tf.float32, [1, self.n_video_step, self.dim_image])
