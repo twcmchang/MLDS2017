@@ -119,9 +119,9 @@ def get_padding_caption(vocab, batch_caption, maxlen):
 	return_caption = []
 	return_caption_mask = []
 	for i in range(len(batch_caption)):
-		# sel = random.randint(0,len(batch_caption[i])-1)
-		# idx_caption, mask = split_padding_caption(vocab, batch_caption[i][sel], maxlen)
-		idx_caption, mask = split_padding_caption(vocab, max(batch_caption[i],key=len), maxlen) 
+		sel = random.randint(0,len(batch_caption[i])-1)
+		idx_caption, mask = split_padding_caption(vocab, batch_caption[i][sel], maxlen)
+		# idx_caption, mask = split_padding_caption(vocab, max(batch_caption[i],key=len), maxlen) 
 		return_caption.append(idx_caption)
 		return_caption_mask.append(mask)
 	
