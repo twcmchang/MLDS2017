@@ -11,14 +11,10 @@ import json
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--train_video_feat_path', type=str, default='MLDS_hw2_data/training_data/feat/',
-						help='directory which contains training video feature files')
+	parser.add_argument('--testing_file', type=str, default='MLDS_hw2_data/testing_id.txt',
+					help='file which contains all testing video ids')
 	parser.add_argument('--test_video_feat_path', type=str, default='MLDS_hw2_data/testing_data/feat/',
 						help='directory which contains testing video feature files')
-	parser.add_argument('--train_label_json', type=str, default='MLDS_hw2_data/training_label.json',
-						help='json file of training captions and corresponding video id')
-	parser.add_argument('--test_label_json', type=str, default='MLDS_hw2_data/testing_public_label.json',
-						help='json file of testing captions and corresponding video id')
 	parser.add_argument('--result_file', type=str, default='output.json',
 						help='result file')
 	parser.add_argument('--init_from', type=str, default='save',
@@ -43,11 +39,10 @@ def test(args):
 
 	vocab_inv = {v:k for k, v in vocab.items()}
 
-	print(saved_args)
-
-	_, _, _, _, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
-
-	print(vocab_inv[359])
+	with open('MLDS_hw2_data/testing_id.txt','r') as f:
+	    test_feat_id = f.readlines()
+	    for i in range(len(test_feat_id)):
+	        test_feat_id[i] = test_feat_id[i].replace('\n','')
 
 	model = Video_Caption_Generator(saved_args,n_vocab=len(vocab),infer=True)
 	
@@ -60,10 +55,12 @@ def test(args):
 
 			if ckpt and ckpt.model_checkpoint_path: # args.init_from is not None:
 				saver.restore(sess, ckpt.model_checkpoint_path)
-				print("Model restored %s" % ckpt.model_checkpoint_path)
+				if i == 0:
+					print("Model restored %s" % ckpt.model_checkpoint_path)
 			sess.run(tf.global_variables())
 			# 
-			print("Initialized")
+			if i ==0:
+				print("Initialized")
 			
 			this_test_feat_id = test_feat_id[i]
 
@@ -75,11 +72,7 @@ def test(args):
 										model.video: current_feat,
 										model.video_mask : current_feat_mask
 										})
-			print(this_gen_idx)
-			# argm = np.argmax(probs[0])	
-			# print(len(probs))			
-			# print(np.argmax(probs[0]))
-			# print(vocab_inv[argm])
+
 			this_gen_words = []
 
 			for k in range(len(this_gen_idx)):
@@ -93,7 +86,6 @@ def test(args):
 			if punctuation > 1:
 				this_gen_words = this_gen_words[:punctuation]
 
-			print(this_gen_words)
 
 			this_caption = ' '.join(this_gen_words)
 			this_caption = this_caption.replace('<BOS> ', '')
