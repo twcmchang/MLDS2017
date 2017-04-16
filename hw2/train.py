@@ -44,6 +44,8 @@ def main():
 						help='% of gpu memory to be allocated to this process. Default is 80%')
 	parser.add_argument('--log_dir', type=str, default='log',
 						help='directory containing log text')
+	parser.add_argument('--schedule_sampling', type=float, default=0.0,
+						help='probability of sampling word from prediction')
 	parser.add_argument('--init_from', type=str, default=None,
 						help="""continue training from saved model at this path. Path must contain files saved by previous training process:
 						    'config.pkl'        : configuration;
@@ -90,7 +92,7 @@ def train(args):
 		with open(os.path.join(args.save_dir, 'vocab.pkl'), 'wb') as f:
 			cPickle.dump(vocab, f)
 
-		model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
+	model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
 	
 	with tf.Session() as sess:
 
@@ -106,6 +108,10 @@ def train(args):
 		loss_to_draw = []
 
 		for epoch in range(0, args.n_epoch):
+			if (model.schedule_sampling > 0.0):
+				# [pseudo] prob of schedule sampling linearly increases with epochs
+				model.schedule_sampling = np.min([model.schedule_sampling * (1.0+epoch/50),1.0])
+
 			# shuffle 
 			index = np.array(range(len(train_feat_id)))
 			np.random.shuffle(index)
@@ -131,13 +137,13 @@ def train(args):
 				current_caption, current_caption_mask = get_padding_caption(vocab, batch_caption, maxlen= model.n_caption_step+1)
 
 				# run train_op to optimizer tf_loss
-				_, loss_val= sess.run([model.train_op, model.tf_loss],feed_dict={
+				_, loss_val = sess.run([model.train_op, model.tf_loss],feed_dict={
 							model.video: current_feat,
 							model.video_mask : current_feat_mask,
 							model.caption: current_caption,
 							model.caption_mask: current_caption_mask
 							})
-
+				
 				loss_to_draw_epoch.append(loss_val)
 
 				print('idx: ', start, " Epoch: ", epoch, " loss: ", loss_val, ' Elapsed time: ', str((time.time() - start_time)))
