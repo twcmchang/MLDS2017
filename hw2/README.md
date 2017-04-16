@@ -39,6 +39,7 @@ python test.py
 ```
 python eval.py
 ```
+Current best average BLEU score: 0.274922 after 1000 epochs
 
 ## Resources
 https://github.com/chenxinpeng/S2VT
