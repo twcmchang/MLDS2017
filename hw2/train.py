@@ -61,25 +61,36 @@ def train(args):
 		# check if all necessary files exist
 		assert os.path.isfile(os.path.join(args.init_from,"config.pkl")), "config.pkl file does not exist in path %s" % args.init_from
 		
+		# get ckpt
 		ckpt = tf.train.get_checkpoint_state(args.init_from)
+
+		# get vocab
+		with open(os.path.join(args.init_from, 'vocab.pkl'), 'rb') as f:
+			vocab = cPickle.load(f)
+		vocab_inv = {v:k for k, v in vocab.items()}
+
+		# read data
+		_, _, train_feat_id, train_caption, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
 		
 		# open old config and check if models are compatible
 		with open(os.path.join(args.init_from, 'config.pkl'), 'rb') as f:
 			saved_args = cPickle.load(f)
-		need_be_same=["model","dim_image","dim_hidden","n_lstm_step","n_video_step","n_caption_step"]
+		need_be_same=["dim_image","dim_hidden","n_lstm_step","n_video_step","n_caption_step"]
 		for checkme in need_be_same:
 			assert vars(saved_args)[checkme]==vars(args)[checkme],"Command line argument and saved model disagree on '%s' "%checkme
+
+		model = Video_Caption_Generator(saved_args,n_vocab=len(vocab),infer=False)
 	
-	with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
-		cPickle.dump(args, f)
+	else:
+		with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
+			cPickle.dump(args, f)
 
-	vocab, vocab_inv, train_feat_id, train_caption, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
+		vocab, vocab_inv, train_feat_id, train_caption, test_feat_id, test_caption = data_preprocess(args.train_label_json,args.test_label_json)
 
-	print(vocab_inv[359])
-	with open(os.path.join(args.save_dir, 'vocab.pkl'), 'wb') as f:
-		cPickle.dump(vocab, f)
+		with open(os.path.join(args.save_dir, 'vocab.pkl'), 'wb') as f:
+			cPickle.dump(vocab, f)
 
-	model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
+		model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
 	
 	with tf.Session() as sess:
 
