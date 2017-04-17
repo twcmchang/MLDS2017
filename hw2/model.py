@@ -196,7 +196,6 @@ class Video_Caption_Generator():
 					output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
 					logits = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
 					probs = tf.nn.softmax(logits)
-					tf.Print(probs)
 					max_prob_index = tf.argmax(logits, 1)[0]
 					gen_caption_idx.append(max_prob_index)
 					pred_probs.append(probs)
