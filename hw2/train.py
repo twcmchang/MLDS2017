@@ -92,7 +92,7 @@ def train(args):
 		with open(os.path.join(args.save_dir, 'vocab.pkl'), 'wb') as f:
 			cPickle.dump(vocab, f)
 
-	model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
+		model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
 	
 	with tf.Session() as sess:
 
