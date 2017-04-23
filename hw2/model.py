@@ -36,10 +36,10 @@ class Video_Caption_Generator():
 
 		# using hWz match function
 		# W for attention
-		self.attention_W = tf.Variable(tf.random_uniform([self.lstm1.state_size,self.lstm1.state_size],-0.1,0.1),name="attention_W")
+		self.attention_W = tf.Variable(tf.random_uniform([self.lstm1.state_size,self.lstm2.state_size],-0.1,0.1),name="attention_W")
 
 		# z for attention
-		self.attention_z = tf.Variable(tf.random_uniform([self.batch_size,self.lstm1.state_size],-0.1,0.1), name="attention_z")
+		self.attention_z = tf.Variable(tf.random_uniform([self.batch_size,self.lstm2.state_size],-0.1,0.1), name="attention_z")
 
 		if infer == False:
 			# input
@@ -67,7 +67,7 @@ class Video_Caption_Generator():
 			# padding when entering LSTM2
 			# A word is embedded as a vector of dim_hidden by Wemb, so the padding vector is with dim_hidden
 			padding = tf.zeros([self.batch_size, self.dim_hidden])
-			context_padding = tf.zeros([self.batch_size, self.lstm1.state_size])
+			context_padding = tf.zeros([self.batch_size, self.lstm2.state_size])
 
 			h_list = [] # T, B, H
 
@@ -89,8 +89,8 @@ class Video_Caption_Generator():
 					alpha_list = []
 					context = []
 					if i == 0:
-						new_context = self.attention_z # batch_size, state1.size
-					new_z = new_context # [B, H]
+						new_z = self.attention_z # batch_size, state1.size
+					# new_z = new_context # [B, H]
 					h_list_flat = tf.reshape(h_list,[-1,self.lstm1.state_size])
 					htmp = tf.matmul(h_list_flat,self.attention_W)
 					hW = tf.reshape(htmp,[self.batch_size, self.n_video_step,self.lstm1.state_size])
@@ -100,11 +100,9 @@ class Video_Caption_Generator():
 						x_alpha = tf.expand_dims(x_alpha,1)
 						x_new_z = tf.reduce_sum(tf.multiply(x_alpha,h_list[x,:,:]),axis=0)
 						alpha_list.append(x_alpha)
-						context.append(x_new_z)
-						
-					new_context = tf.stack(context)
+						context.append(x_new_z)	
+					context = tf.stack(context)
 				# import ipdb; ipdb.set_trace()
-				print("Constructed attention")
 				# first word of the caption should be <BOS>, keep!
 				if i == 0:
 					with tf.device("/cpu:0"):
@@ -113,7 +111,8 @@ class Video_Caption_Generator():
 					output1, state1 = self.lstm1(padding, state1)
 				with tf.variable_scope("LSTM2",reuse=True):
 					if self.attention == 1:
-						output2, state2 = self.lstm2(tf.concat([current_word_embed,output1,new_context],1),state2)
+						output2, state2 = self.lstm2(tf.concat([current_word_embed,output1,context],1),state2)
+						new_z = state2 # updated z0
 					else:
 						output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
 
@@ -147,7 +146,6 @@ class Video_Caption_Generator():
 
 			self.tf_loss = loss
 			self.tf_probs = pred_probs
-			self.check = new_context
 			self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.tf_loss)
 
 		# infer == True, testing
