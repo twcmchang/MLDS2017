@@ -14,6 +14,7 @@ class Video_Caption_Generator():
 		self.grad_clip		= args.grad_clip
 		self.n_vocab 		= n_vocab
 		self.schedule_sampling = args.schedule_sampling
+		self.attention = args.attention
 		
 		# model components
 
@@ -34,11 +35,11 @@ class Video_Caption_Generator():
 		self.embed_word_b  = tf.Variable(tf.zeros([self.n_vocab]), name="embed_word_b")
 
 		# using hWz match function
-		# weight for attention
-		# self.attention_W = tf.Variable(tf.random_uniform([self.lstm1.state_size,self.lstm1.state_size],-0.1,0.1),name="attention_W")
+		# W for attention
+		self.attention_W = tf.Variable(tf.random_uniform([self.lstm1.state_size,self.lstm1.state_size],-0.1,0.1),name="attention_W")
 
-		# # z0 for attention
-		# self.attention_z = tf.Variable(tf.random_uniform([self.batch_size,self.lstm1.state_size,1],-0.1,0.1), name="attention_z")
+		# z for attention
+		self.attention_z = tf.Variable(tf.random_uniform([self.batch_size,self.lstm1.state_size],-0.1,0.1), name="attention_z")
 
 		if infer == False:
 			# input
@@ -66,65 +67,55 @@ class Video_Caption_Generator():
 			# padding when entering LSTM2
 			# A word is embedded as a vector of dim_hidden by Wemb, so the padding vector is with dim_hidden
 			padding = tf.zeros([self.batch_size, self.dim_hidden])
-			# context_padding = tf.zeros([self.batch_size, self.lstm1.state_size])
+			context_padding = tf.zeros([self.batch_size, self.lstm1.state_size])
 
-			# h_list = [] # T, B, H
-			# alpha_list = []
+			h_list = [] # T, B, H
 
 			for i in range(0,self.n_video_step):
 				with tf.variable_scope("LSTM1",reuse=(i!=0)):
 					output1, state1 = self.lstm1(image_embed[:,i,:],state1)
-					# h_list.append(state1)
+					h_list.append(state1)
 				with tf.variable_scope("LSTM2",reuse=(i!=0)):
-					output2, state2 = self.lstm2(tf.concat([padding, output1],1), state2)
-					# output2, state2 = self.lstm2(tf.concat([padding, output1, context_padding],1), state2)
-
-			# h_list = tf.stack(h_list,axis=1)
+					if self.attention == 1:
+						output2, state2 = self.lstm2(tf.concat([padding, output1, context_padding],1), state2)
+					else:
+						output2, state2 = self.lstm2(tf.concat([padding, output1],1), state2)						
+			h_list = tf.stack(h_list,axis=1) # batch_size, n_video_step, state1.size
 
 			### Step 3: (decoding stage) acquire prediction from LSTM2 output ###
-			# tf.Print(h_list,[h_list.get_shape()],message="shape")
-
 			for i in range(0, self.n_caption_step):
-				# # perform attention-based model
-				# with tf.variable_scope("Attention",reuse=(i!=0)):
-				# 	if i == 0:
-				# 		new_context = self.attention_z
-				# 	else:
-				# 		new_context = context
-
-				# 	context = []
-				# 	for j in range(0,self.batch_size):
-				# 		current_z = new_context[j,:]
-				# 		current_z = tf.reshape(current_z,[self.lstm1.state_size,1])
-				# 		# hidden state list to tensor
-				# 		h_list_flat = tf.reshape(h_list[j,:,:], [-1, self.lstm1.state_size])
-				# 		# compute hW = h*W
-				# 		hW = tf.matmul(h_list_flat, self.attention_W)
-				# 		# compute alpha = hW*z
-				# 		alpha = tf.matmul(hW,current_z)
-				# 		alpha = tf.reshape(alpha, [-1,self.n_video_step])
-				# 		# apply softmax on alpha
-				# 		# alpha = tf.nn.softmax(alpha)
-
-				# 		# tf.Print(alpha,[tf.nn.softmax(alpha)],message="alpha (softmax)")
+				if self.attention == 1:
+					print("Constructing attention (%d/%d)" % (i+1,self.n_caption_step),end='')
+					alpha_list = []
+					context = []
+					if i == 0:
+						new_context = self.attention_z # batch_size, state1.size
+					new_z = new_context # [B, H]
+					h_list_flat = tf.reshape(h_list,[-1,self.lstm1.state_size])
+					htmp = tf.matmul(h_list_flat,self.attention_W)
+					hW = tf.reshape(htmp,[self.batch_size, self.n_video_step,self.lstm1.state_size])
+					for x in range(0,self.batch_size):
+						x_alpha = tf.reduce_sum(tf.multiply(hW[x,:,:],new_z[x,:]),axis=1)
+						x_alpha = tf.nn.softmax(x_alpha)
+						x_alpha = tf.expand_dims(x_alpha,1)
+						x_new_z = tf.reduce_sum(tf.multiply(x_alpha,h_list[x,:,:]),axis=0)
+						alpha_list.append(x_alpha)
+						context.append(x_new_z)
 						
-				# 		# compute context = weighted sum of alpha_i*h_i
-				# 		# context = tf.reduce_sum(h_list * tf.expand_dims(alpha, 2), 1)
-				# 		context_j = tf.matmul(alpha, tf.squeeze(h_list[j,:,:]))
-				# 		context.append(tf.squeeze(context_j))
-
-				# 	context = tf.stack(context)
-
+					new_context = tf.stack(context)
+				# import ipdb; ipdb.set_trace()
+				print("Constructed attention")
 				# first word of the caption should be <BOS>, keep!
 				if i == 0:
 					with tf.device("/cpu:0"):
 						current_word_embed = tf.nn.embedding_lookup(self.Wemb, self.caption[:,i])
-
 				with tf.variable_scope("LSTM1",reuse=True):
 					output1, state1 = self.lstm1(padding, state1)
 				with tf.variable_scope("LSTM2",reuse=True):
-					output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
-					# output2, state2 = self.lstm2(tf.concat([current_word_embed,output1,context],1),state2)
+					if self.attention == 1:
+						output2, state2 = self.lstm2(tf.concat([current_word_embed,output1,new_context],1),state2)
+					else:
+						output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
 
 					### Step 4: calculate loss ### 
 					# create answer 
@@ -156,7 +147,7 @@ class Video_Caption_Generator():
 
 			self.tf_loss = loss
 			self.tf_probs = pred_probs
-			# self.context = h_list
+			self.check = new_context
 			self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.tf_loss)
 
 		# infer == True, testing
@@ -170,18 +161,26 @@ class Video_Caption_Generator():
 
 			state1 = tf.zeros([1, self.lstm1.state_size])
 			state2 = tf.zeros([1, self.lstm2.state_size])
+
 			padding = tf.zeros([1, self.dim_hidden])
+			context_padding = tf.zeros([1, self.lstm1.state_size])
+
+			h_list = []
 
 			gen_caption_idx = []
-
 			pred_probs = []
 			embeds = []
-
+			
 			for i in range(0,self.n_video_step):
 				with tf.variable_scope("LSTM1",reuse=(i!=0)):
 					output1, state1 = self.lstm1(image_embed[:,i,:],state1)
+					h_list.append(state1)
 				with tf.variable_scope("LSTM2",reuse=(i!=0)):
-					output2, state2 = self.lstm2(tf.concat([padding, output1],1), state2)
+					if self.attention == 1:
+						output2, state2 = self.lstm2(tf.concat([padding, output1, context_padding],1), state2)
+					else:
+						output2, state2 = self.lstm2(tf.concat([padding, output1],1), state2)						
+			h_list = tf.stack(h_list,axis=1) # batch_size, n_video_step, state1.size
 
 			for i in range(0, self.n_caption_step):
 				if i == 0:
@@ -189,16 +188,48 @@ class Video_Caption_Generator():
 					# <BOS> is defined at the index of 0 in function build_word_vocabuary in utils.py.	
 					with tf.device("/cpu:0"):
 						current_word_embed = tf.nn.embedding_lookup(self.Wemb, tf.zeros([1],dtype=tf.int64))
+				# start of attention-based
+				if self.attention == 1:
+					alpha_list = []
+					context = []
+					if i == 0:
+						new_context = self.attention_z # batch_size, state1.size
+					new_z = new_context # [B, H]
+					h_list_flat = tf.reshape(h_list,[-1,self.lstm1.state_size])
+					htmp = tf.matmul(h_list_flat,self.attention_W)
+					hW = tf.reshape(htmp,[1, self.n_video_step,self.lstm1.state_size])
+					for x in range(0,1):
+						x_alpha = tf.reduce_sum(tf.multiply(hW[x,:,:],new_z[x,:]),axis=1)
+						x_alpha = tf.nn.softmax(x_alpha)
+						x_alpha = tf.expand_dims(x_alpha,1)
+						x_new_z = tf.reduce_sum(tf.multiply(x_alpha,h_list[x,:,:]),axis=0)
+						alpha_list.append(x_alpha)
+						context.append(x_new_z)
+					new_context = tf.stack(context)
 
 				with tf.variable_scope("LSTM1",reuse=True):
 					output1, state1 = self.lstm1(padding, state1)
 				with tf.variable_scope("LSTM2",reuse=True):
-					output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
+					if self.attention == 1:
+						output2, state2 = self.lstm2(tf.concat([current_word_embed,output1,new_context],1),state2)
+					else:
+						output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
 					logits = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
 					probs = tf.nn.softmax(logits)
 					max_prob_index = tf.argmax(logits, 1)[0]
 					gen_caption_idx.append(max_prob_index)
 					pred_probs.append(probs)
+				# end of attention-based
+
+				# with tf.variable_scope("LSTM1",reuse=True):
+				# 	output1, state1 = self.lstm1(padding, state1)
+				# with tf.variable_scope("LSTM2",reuse=True):
+				# 	output2, state2 = self.lstm2(tf.concat([current_word_embed,output1],1),state2)
+				# 	logits = tf.nn.xw_plus_b(output2, self.embed_word_W, self.embed_word_b)
+				# 	probs = tf.nn.softmax(logits)
+				# 	max_prob_index = tf.argmax(logits, 1)[0]
+				# 	gen_caption_idx.append(max_prob_index)
+				# 	pred_probs.append(probs)
 
 				# update current_word_embed
 				with tf.device("/cpu:0"):

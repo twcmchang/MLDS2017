@@ -46,6 +46,8 @@ def main():
 						help='directory containing log text')
 	parser.add_argument('--schedule_sampling', type=float, default=0.0,
 						help='probability of sampling word from prediction')
+	parser.add_argument('--attention', type=int, default=0,
+						help='open(1) or close(0) the attention mechanism')
 	parser.add_argument('--init_from', type=str, default=None,
 						help="""continue training from saved model at this path. Path must contain files saved by previous training process:
 						    'config.pkl'        : configuration;
@@ -103,7 +105,6 @@ def train(args):
 		if args.init_from is not None:
 			saver.restore(sess, ckpt.model_checkpoint_path)
 
-
 		loss_fd = open('log/loss.txt', 'w')
 		loss_to_draw = []
 
@@ -143,7 +144,6 @@ def train(args):
 							model.caption: current_caption,
 							model.caption_mask: current_caption_mask
 							})
-				
 				loss_to_draw_epoch.append(loss_val)
 
 				print('idx: ', start, " Epoch: ", epoch, " loss: ", loss_val, ' Elapsed time: ', str((time.time() - start_time)))
