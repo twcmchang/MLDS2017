@@ -93,7 +93,7 @@ class Video_Caption_Generator():
 					# new_z = new_context # [B, H]
 					h_list_flat = tf.reshape(h_list,[-1,self.lstm1.state_size])
 					htmp = tf.matmul(h_list_flat,self.attention_W)
-					hW = tf.reshape(htmp,[self.batch_size, self.n_video_step,self.lstm1.state_size])
+					hW = tf.reshape(htmp,[self.batch_size, self.n_video_step,self.lstm2.state_size])
 					for x in range(0,self.batch_size):
 						x_alpha = tf.reduce_sum(tf.multiply(hW[x,:,:],new_z[x,:]),axis=1)
 						x_alpha = tf.nn.softmax(x_alpha)
