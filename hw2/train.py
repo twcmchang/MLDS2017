@@ -79,7 +79,7 @@ def train(args):
 		# open old config and check if models are compatible
 		with open(os.path.join(args.init_from, 'config.pkl'), 'rb') as f:
 			saved_args = cPickle.load(f)
-		need_be_same=["dim_image","dim_hidden","n_lstm_step","n_video_step","n_caption_step"]
+		need_be_same=["dim_image","dim_hidden","n_lstm_step","n_video_step","n_caption_step","attention"]
 		for checkme in need_be_same:
 			assert vars(saved_args)[checkme]==vars(args)[checkme],"Command line argument and saved model disagree on '%s' "%checkme
 		
