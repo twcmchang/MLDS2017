@@ -82,9 +82,7 @@ def train(args):
 		need_be_same=["dim_image","dim_hidden","n_lstm_step","n_video_step","n_caption_step"]
 		for checkme in need_be_same:
 			assert vars(saved_args)[checkme]==vars(args)[checkme],"Command line argument and saved model disagree on '%s' "%checkme
-
-		model = Video_Caption_Generator(saved_args,n_vocab=len(vocab),infer=False)
-	
+		
 	else:
 		with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
 			cPickle.dump(args, f)
@@ -94,7 +92,7 @@ def train(args):
 		with open(os.path.join(args.save_dir, 'vocab.pkl'), 'wb') as f:
 			cPickle.dump(vocab, f)
 
-		model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
+	model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
 	
 	# add gpu options
 	gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_mem)
