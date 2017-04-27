@@ -13,8 +13,9 @@ def main():
     parser.add_argument('--result_file', type=str, default='output.json',
                         help='result file')
     args = parser.parse_args()
-    score = eval_json(args.result_file,args.test_label_json)
+    score, caption_len = eval_json(args.result_file,args.test_label_json)
     print('Average BLEU score: %4f' % np.mean(score))
+    print('Average caption length: %4f' % np.mean(caption_len))
 
 def count_ngram(candidate, references, n):
     clipped_count = 0
@@ -129,6 +130,7 @@ def eval_json(output_json, test_json):
         target_feat_id.append(target[i]['id'])
     #
     score = []
+    caption_len = []
     for i in range(len(output_feat_id)):
         output_i = output_caption[i]
         target_i = target_caption[i]
@@ -136,7 +138,8 @@ def eval_json(output_json, test_json):
         for j in range(len(target_i)):
             this_score = this_score + BLEU(output_i,target_i[j])
         score.append(this_score/len(target_i))
-    return score
+        caption_len.append(len(output_i.strip().split()))
+    return score, caption_len
 
 if __name__ == '__main__':
     main()
