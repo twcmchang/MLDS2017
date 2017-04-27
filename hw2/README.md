@@ -1,4 +1,4 @@
-# Train
+# (1) Train
 
 ### Default setting
 ```
@@ -8,7 +8,7 @@ python train.py
 |:-------:|:----:|:----:|:----:|:----:|:----:|
 |Default  |  80  |  80  |  20  | 4096 | 1000 |
 |**Training parameter** | **```n_epoch```** | **```batch_size```** | **```learning_rate```** | **```grad_clip```** ||
-|Default | 1000 |  50  | .001 |  10  ||
+|Default | 1000 |  50  | 0.001 |  10  ||
 
 After training, model/checkpoint will be stored in a specfic direcotry (default: save/).
 
@@ -19,26 +19,28 @@ python train.py --schedule_sampling 0.01
 ```
 Sampling probability is designed to increase (1+N) times after 50*N epochs.
 
-<<<<<<< HEAD
-=======
 ### Attention-based model (default: 0)
 Turn on Attention as follow.
 ```
 python train.py --attention 1
 ```
 
->>>>>>> branch-jimmy-hw2-attention
-# Test
+# (2) Test
 ```
 python test.py
 ```
-|**Argument**| **```file```** | **```path```** | **```output```** | **```init_from```** | 
+|**Argument**| **```testing_file```** | **```testing_path```** | **```result_file```** | **```init_from```** | 
 |:-------:|:----:|:----:|:----:|:----:|
 |Default  |MLDS_hw2_data/testing_id.txt|MLDS_hw2_data/testing_data/feat/|output.json|save/| 
 
-### Evaluate the average BLEU score
+If would like to specify testing_file and testing_path,
 ```
-python eval.py
+python test.py --testing_file "your_testing_id.txt" --testing_path "your_testing_feat_path"
+```
+
+# (3) Evaluate
+```
+python eval.py --result_file "your_output_json" --test_label_json "your_answer_json"
 ```
 |**Argument**| **```test_label_json```** | **```result_file```** | 
 |:-------:|:----:|:----:|
