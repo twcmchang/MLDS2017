@@ -11,11 +11,11 @@ import json
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--file', type=str, default='MLDS_hw2_data/testing_id.txt',
+	parser.add_argument('--testing_file', type=str, default='MLDS_hw2_data/testing_id.txt',
 					help='file which contains all testing video ids')
-	parser.add_argument('--path', type=str, default='MLDS_hw2_data/testing_data/feat/',
+	parser.add_argument('--testing_path', type=str, default='MLDS_hw2_data/testing_data/feat/',
 						help='directory which contains testing video feature files')
-	parser.add_argument('--output', type=str, default='output.json',
+	parser.add_argument('--result_file', type=str, default='output.json',
 						help='result file')
 	parser.add_argument('--init_from', type=str, default='save',
 						help="""initialize from saved model at this path.
@@ -34,12 +34,23 @@ def test(args):
 	with open(os.path.join(args.init_from, 'config.pkl'), 'rb') as f:
 		saved_args = cPickle.load(f)
 
+	# complete arguments to fulfill different versions
+	if("attention" in vars(saved_args)):
+		print("attention: %d" % vars(saved_args)["attention"])
+	else:
+		vars(saved_args)["attention"] = 0
+
+	if("schedule_sampling" in vars(saved_args)):
+		print("schedule_sampling: %d" % vars(saved_args)["schedule_sampling"])
+	else:
+		vars(saved_args)["schedule_sampling"] = 0.0
+
 	with open(os.path.join(args.init_from, 'vocab.pkl'), 'rb') as f:
 		vocab = cPickle.load(f)
 
 	vocab_inv = {v:k for k, v in vocab.items()}
 
-	with open(args.file,'r') as f:
+	with open(args.testing_file,'r') as f:
 	    test_feat_id = f.readlines()
 	    for i in range(len(test_feat_id)):
 	        test_feat_id[i] = test_feat_id[i].replace('\n','')
@@ -66,7 +77,7 @@ def test(args):
 
 			# get vdieo features
 			# notes: the second argument to get_video_feat must be np.array
-			current_feat, current_feat_mask = get_video_feat(args.path, np.array([this_test_feat_id]))
+			current_feat, current_feat_mask = get_video_feat(args.testing_path, np.array([this_test_feat_id]))
 			
 			this_gen_idx, probs = sess.run([model.gen_caption_idx,model.pred_probs],feed_dict={
 										model.video: current_feat,
@@ -99,7 +110,7 @@ def test(args):
 
 			result.append(this_answer)
 
-		with open(args.output, 'w') as fout:
+		with open(args.result_file, 'w') as fout:
 			json.dump(result, fout)
 
 if __name__ == '__main__':
