@@ -46,6 +46,8 @@ def main():
 						help='directory containing log text')
 	parser.add_argument('--schedule_sampling', type=float, default=0.0,
 						help='probability of sampling word from prediction')
+	parser.add_argument('--attention', type=int, default=0,
+						help='open(1) or close(0) the attention mechanism')
 	parser.add_argument('--init_from', type=str, default=None,
 						help="""continue training from saved model at this path. Path must contain files saved by previous training process:
 						    'config.pkl'        : configuration;
@@ -80,9 +82,18 @@ def train(args):
 		need_be_same=["dim_image","dim_hidden","n_lstm_step","n_video_step","n_caption_step"]
 		for checkme in need_be_same:
 			assert vars(saved_args)[checkme]==vars(args)[checkme],"Command line argument and saved model disagree on '%s' "%checkme
+		
+		# complete arguments to fulfill different versions
+		if("attention" in vars(saved_args)):
+			print("attention: %d" % vars(saved_args)["attention"])
+		else:
+			vars(saved_args)["attention"] = 0
 
-		model = Video_Caption_Generator(saved_args,n_vocab=len(vocab),infer=False)
-	
+		if("schedule_sampling" in vars(saved_args)):
+			print("schedule_sampling: %d" % vars(saved_args)["schedule_sampling"])
+		else:
+			vars(saved_args)["schedule_sampling"] = 0.0
+
 	else:
 		with open(os.path.join(args.save_dir, 'config.pkl'), 'wb') as f:
 			cPickle.dump(args, f)
@@ -92,9 +103,12 @@ def train(args):
 		with open(os.path.join(args.save_dir, 'vocab.pkl'), 'wb') as f:
 			cPickle.dump(vocab, f)
 
-		model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
+	model = Video_Caption_Generator(args,n_vocab=len(vocab),infer=False)
 	
-	with tf.Session() as sess:
+	# add gpu options
+	gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=args.gpu_mem)
+
+	with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
 
 		tf.global_variables_initializer().run()
 		print("Initialized")
@@ -102,7 +116,6 @@ def train(args):
 		saver = tf.train.Saver(tf.global_variables())
 		if args.init_from is not None:
 			saver.restore(sess, ckpt.model_checkpoint_path)
-
 
 		loss_fd = open('log/loss.txt', 'w')
 		loss_to_draw = []
@@ -143,7 +156,6 @@ def train(args):
 							model.caption: current_caption,
 							model.caption_mask: current_caption_mask
 							})
-				
 				loss_to_draw_epoch.append(loss_val)
 
 				print('idx: ', start, " Epoch: ", epoch, " loss: ", loss_val, ' Elapsed time: ', str((time.time() - start_time)))

@@ -19,6 +19,15 @@ python train.py --schedule_sampling 0.01
 ```
 Sampling probability is designed to increase (1+N) times after 50*N epochs.
 
+<<<<<<< HEAD
+=======
+### Attention-based model (default: 0)
+Turn on Attention as follow.
+```
+python train.py --attention 1
+```
+
+>>>>>>> branch-jimmy-hw2-attention
 # Test
 ```
 python test.py
