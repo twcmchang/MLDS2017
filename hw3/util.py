@@ -36,7 +36,7 @@ def get_tag_dict(raw_tag_dict,wanted_tag=["hair","eye"]):
         keys = list(raw_tag_dict[i].keys())
         for j in range(len(wanted_tag)):
             this_desc[j] = " ".join(get_desc(wanted_tag[j],keys)).lower()
-        tag_dict_in_use[i] = " and ".join(this_desc)
+        tag_dict_in_use[i] = " ".join(this_desc)
     return tag_dict_in_use
 
 def get_image_tag_pair(tag_dict_in_use,img_path="data/faces/"):
