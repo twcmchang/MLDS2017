@@ -1,6 +1,6 @@
 # Quick start
 ```
-bash run.sh MLDS_hw2_data/testing_id.txt MLDS_hw2_data/testing_data/feat/ output.json
+bash run.sh MLDS_hw2_data/testing_id.txt MLDS_hw2_data/testing_data/feat/
 ```
 
 # (1) Train
