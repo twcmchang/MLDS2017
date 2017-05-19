@@ -20,8 +20,8 @@ profile = False
 #-----------------------------------------------------------------------------#
 # Specify model and table locations here
 #-----------------------------------------------------------------------------#
-path_to_models = '/Users/chunmingchang/MLDS2017/hw3/sent2vec/model/'
-path_to_tables = '/Users/chunmingchang/MLDS2017/hw3/sent2vec/model/'
+path_to_models = '/home/gtx980/Desktop/cclin/MLDS2017/hw3/sent2vec/model/'
+path_to_tables = '/home/gtx980/Desktop/cclin/MLDS2017/hw3/sent2vec/model/'
 
 #-----------------------------------------------------------------------------#
 
