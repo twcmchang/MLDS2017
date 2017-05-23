@@ -186,6 +186,8 @@ class DCGAN(object):
 
                 # Update D network
                 batch_z = np.random.uniform(-1, 1, [self.batch_size, self.z_dim]).astype(np.float32)
+                ## random select texts as "wrong" texts
+                batch_y_random = [self.tags[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
                 _, summary_str = self.sess.run([d_optim, self.d_sum],
                     feed_dict={ self.inputs: batch_images, self.z: batch_z, \
                                 self.y: batch_y, self.y_random: batch_y_random })
@@ -193,12 +195,16 @@ class DCGAN(object):
 
                 # Update G network
                 batch_z = np.random.uniform(-1, 1, [self.batch_size, self.z_dim]).astype(np.float32)
+                ## random select texts as "wrong" texts
+                batch_y_random = [self.tags[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
                 _, summary_str = self.sess.run([g_optim, self.g_sum],
                     feed_dict={ self.z: batch_z, self.y: batch_y })
                 self.writer.add_summary(summary_str, counter)
 
                 # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
                 batch_z = np.random.uniform(-1, 1, [self.batch_size, self.z_dim]).astype(np.float32)
+                ## random select texts as "wrong" texts
+                batch_y_random = [self.tags[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
                 _, summary_str = self.sess.run([g_optim, self.g_sum],
                     feed_dict={ self.z: batch_z, self.y: batch_y })
                 self.writer.add_summary(summary_str, counter)
