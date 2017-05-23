@@ -8,15 +8,27 @@ Generative Adversarial Networks
 
 ## Usage
 
-To train a model with image folder 'faces' and text vectors 'vec_hair_eyes.p' for 600 epochs:
+### Training
 
-	$ python main.py --train
+(Default) To train a improved WGAN model with image folder 'faces' and text vectors 'vec_hair_eyes.pkl' for 600 epochs:
 
-Or you can specify the image folder by --dataset, file of text vectors by --tag_filename, and number of epochs by --epoch, for example:
+	$ python train.py
 
-	$ python main.py --dataset mnist --tag_filename vec_hair_eyes.p --epoch 200 --train
+Some samples of generated images will be stored in temp_samples_WGAN_v2, and checkpoints will be stored in save_WGAN_v2.
 
-For further arguments, please refer to flags defined in main.py.
+Or you can specify the model by --model (other choices are DCGAN and WGAN), image folder by --dataset, file of text vectors by --tag_filename, and number of epochs by --epoch, for example:
+
+	$ python train.py --model DCGAN --dataset faces --tag_filename vec_hair_eyes_padding.pkl --epoch 200
+
+Some samples of generated images will be stored in temp_samples_DCGAN, and checkpoints will be stored in save_DCGAN.
+
+For further parameters, please refer to args defined in train.py.
+
+### Generation
+
+To generate images from a saved model and a testing text to a specific folder:
+
+	$ python generate.py --testing_text testing_text.txt --sample_dir samples --init_from save_WGAN_v2
 
 ## References
 
