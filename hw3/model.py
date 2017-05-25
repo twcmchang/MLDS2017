@@ -73,9 +73,8 @@ class DCGAN(object):
                 self.tags = cPickle.load(open(tag_filename, 'rb'), encoding='latin1')
                 self.tags_sp = cPickle.load(open(tag_filename_sp, 'rb'), encoding='latin1')
             self.file_names = list(self.tags.keys())
-
-        data_all = glob(os.path.join(self.dataset_name, self.input_fname_pattern))
-        self.data = [file_path for file_path in data_all if int(re.split('\\.', os.path.basename(file_path))[0]) in self.file_names]
+            data_all = glob(os.path.join(self.dataset_name, self.input_fname_pattern))
+            self.data = [file_path for file_path in data_all if int(re.split('\\.', os.path.basename(file_path))[0]) in self.file_names]
 
         self.c_dim = c_dim
         self.t_dim = t_dim
