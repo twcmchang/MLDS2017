@@ -1,4 +1,13 @@
-# HW3
+# Quick start
+```
+bash run.sh testing_text.txt
+```
+# Tag processing tools
+skipthoughts
+theano
+numpy
+scipy
+
 Generative Adversarial Networks
 - [Slide][slide] & [Dataset][dataset]
 - Deadline: 5/25(Thu.) 23:59:59 (UTC+8)
