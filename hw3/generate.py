@@ -137,7 +137,7 @@ def generate(args):
         # show_all_variables()
         could_load, checkpoint_counter = gan.load(args.init_from)
         if could_load:
-            args.sample_dir = args.sample_dir + str(checkpoint_counter)
+            # args.sample_dir = args.sample_dir + str(checkpoint_counter)
             if not os.path.exists(args.sample_dir):
                 os.makedirs(args.sample_dir)
         else:
