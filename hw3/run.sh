@@ -1,6 +1,6 @@
 #!/bin/bash
 wget -O model.zip "https://www.dropbox.com/s/xplxts5g9ousjs6/model.zip?dl=0"
-unzip model.zip -d model/ 
+unzip model.zip -d ./
 wget -P sent2vec/ http://www.cs.toronto.edu/~rkiros/models/dictionary.txt
 wget -P sent2vec/ http://www.cs.toronto.edu/~rkiros/models/utable.npy
 wget -P sent2vec/ http://www.cs.toronto.edu/~rkiros/models/btable.npy
