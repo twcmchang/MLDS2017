@@ -1,9 +1,22 @@
-- [DCGAN-tensorflow](https://github.com/carpedm20/DCGAN-tensorflow)
-- [text-to-image](https://github.com/paarthneekhara/text-to-image)
-
-# Generative Adversarial Networks
-- [Slide][slide] & [Dataset][dataset]
+# ChatBot 
+- [Slide][slide]
 - Deadline: 5/25(Thu.) 23:59:59 (UTC+8)
+- Open domain & Single turn
 
-[slide]: https://docs.google.com/presentation/d/1Ea4ywtR5jwiGs-LLkKaaKazxZA37l88vBpjRg7meTB8/edit#slide=id.p
-[dataset]: https://drive.google.com/open?id=0BwJmB7alR-AvMHEtczZZN0EtdzQ
+## Dataset (list in slides)
+- [Cornell Movie-Dialogs Corpus][CMDS]
+- [OpenSubtitles][OS]
+- [Marsan-Ma chat-corpus][MMCC]
+- [chatterbot corpus][CBC]
+- [CallHome][CH]
+
+## Others
+- [Search QA][SQA]
+
+[slide]: https://docs.google.com/presentation/d/1e-9a7MmHDi1OfXrSFh_NOuyXjK2cN640JcZ5D08MBEk/edit#slide=id.g1efeb48205_0_0
+[CMDS]: https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html
+[OS]: http://opus.lingfil.uu.se/OpenSubtitles.php
+[MMCC]: https://github.com/Marsan-Ma/chat_corpus
+[CBC]: https://github.com/gunthercox/chatterbot-corpus/tree/master/chatterbot_corpus/data
+[CH]: http://talkbank.org/access/CABank/CallHome/eng.html
+[SQA]: https://github.com/nyu-dl/SearchQA
