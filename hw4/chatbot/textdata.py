@@ -31,7 +31,7 @@ class TextData:
     """
 
     availableCorpus = collections.OrderedDict([  # OrderedDict because the first element is the default choice
-        ('cornell\ movie-dialogs\ corpus', CornellData),
+        ('cornell', CornellData),
     ])
 
     @staticmethod
