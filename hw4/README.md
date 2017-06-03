@@ -1,7 +1,7 @@
 # Seq2Seq chatbot (without reinforcement learning)
 
 ## Train
-Put training data into data/
+Put training data into data/ (e.g. hw4/data/cornell movie-dialogs corpus)
 ```
 python3 main.py
 ```
@@ -9,11 +9,11 @@ python3 main.py
 ```
 python3 main.py --test 
 ```
+results generated in 'save/model/samples_predictions.txt'
 or
 ```
 python3 main.py --test interactive
 ```
-results generated in 'save/model/samples_predictions.txt'
 
 # ChatBot 
 - [Slide][slide]
