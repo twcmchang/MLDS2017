@@ -18,15 +18,21 @@ singular values 都接近 1，此性質對 training 會有幫助。這是真的�
 
 ### 6. BN vs. batch size
 Batch normalization 的作者有提到 batch size 太小的時候，batch normalization 表現可能會不好，該怎麼設定 batch size 才能避免這個問題呢？多大的 batch size 才足夠呢？
+- 跑實驗
 
 ### 7. BN vs. training/testing distribution
 當 training/testing dataset 的 distribution 差異太大時，batch normalization 表現可能會不好，那 training/testing dataset 的 distribution 差異該控制在多少的範圍內，使用 batch normalization 才會有幫助呢？
+- 只拿 0 1 的資料，產生 imbalanced dataset。在 training 時作 data balancing，但在 testing 時使用原本的 distribution。看多 imbalanced 會爆炸。
 
 ### 8. BN vs. regularization (dropout, L1&L2)
 Batch normalization 作者宣稱使用 batch normalization 即有 regularization 的效果，可以減少(甚至移除) dropout 或 L1, L2 regularizer 的強度。那雙管齊下會更好嗎？還是只能擇一？
+- (first) 實驗有加跟沒有加，加入 dropout 0.0 - 0.5
 
 ### 9. BRN vs. Hyper parameters
 Batch renomalization 被提出用來解決當 batch size 過小或 non-i.i.d batch 的問題，在 batch renormalization 的方法中，有許多的 hyper-parameters，如：moving average 的 update rate，這些 hyper-parameters 如何影響 batch renormalization 的表現呢？
+- alpha, updating rate
+- 用 BN 先 train N 個 batch steps 再用 BRN 會比較好 (paper: N=5000 steps)
+- (optional) rmax&dmax selection.
 
 ### 10. BN/BRN vs. moving average methods
 batch normalization/renormalization 在訓練過程中，會以 moving average 的方式不斷更新 testing 時使用的 mean 和 variance，有更好的方法 (如：其他的 average 方式) 去估測 testing 使用的 mean 和 variance 嗎？
