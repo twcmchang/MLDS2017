@@ -1,3 +1,20 @@
+# Seq2Seq chatbot (without reinforcement learning)
+
+## Train
+Put training data into data/
+```
+python3 main.py
+```
+## Test
+```
+python3 main.py --test 
+```
+or
+```
+python3 main.py --test interactive
+```
+results generated in 'save/model/samples_predictions.txt'
+
 # ChatBot 
 - [Slide][slide]
 - Deadline: 6/8(Thu.) 23:59:59 (UTC+8)
