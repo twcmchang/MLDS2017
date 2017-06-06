@@ -20,7 +20,7 @@ class DCGAN(object):
         dataset_name='faces', input_fname_pattern='*.jpg', crop=False,
         gfc_dim=1024, dfc_dim=1024, c_dim=3,  
         save_dir='save_DCGAN', temp_samples_dir='temp_samples_DCGAN',
-        tag_filename='vec_hair_eyes.pkl', tag_filename_sp='blonde_hair_blue_eyes.pkl'):
+        tag_filename='vec_hair_eyes.pkl', tag_filename_sp='blonde_hair_blue_eyes.pkl', infer=False):
         """
         Args:
           sess: TensorFlow session
@@ -65,15 +65,16 @@ class DCGAN(object):
         self.temp_samples_dir = temp_samples_dir
 
         ## tags are dictionary {2: embedding of 'blonde hair pink eyes', 3: embedding of 'blonde hair long hair purple eyes', ...}
-        try:
-            self.tags = cPickle.load(open(tag_filename, 'rb'))
-            self.tags_sp = cPickle.load(open(tag_filename_sp, 'rb'))
-        except:
-            self.tags = cPickle.load(open(tag_filename, 'rb'), encoding='latin1')
-            self.tags_sp = cPickle.load(open(tag_filename_sp, 'rb'), encoding='latin1')
-        self.file_names = list(self.tags.keys())
-        data_all = glob(os.path.join(self.dataset_name, self.input_fname_pattern))
-        self.data = [file_path for file_path in data_all if int(re.split('\\.', os.path.basename(file_path))[0]) in self.file_names]
+        if not infer:
+            try:
+                self.tags = cPickle.load(open(tag_filename, 'rb'))
+                self.tags_sp = cPickle.load(open(tag_filename_sp, 'rb'))
+            except:
+                self.tags = cPickle.load(open(tag_filename, 'rb'), encoding='latin1')
+                self.tags_sp = cPickle.load(open(tag_filename_sp, 'rb'), encoding='latin1')
+            self.file_names = list(self.tags.keys())
+            data_all = glob(os.path.join(self.dataset_name, self.input_fname_pattern))
+            self.data = [file_path for file_path in data_all if int(re.split('\\.', os.path.basename(file_path))[0]) in self.file_names]
 
         self.c_dim = c_dim
         self.t_dim = t_dim
@@ -129,7 +130,7 @@ class DCGAN(object):
         t_vars = tf.trainable_variables()
         self.d_vars = [var for var in t_vars if 'd_' in var.name]
         self.g_vars = [var for var in t_vars if 'g_' in var.name]
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep = None) ## keep all checkpoints!
 
     ## Pass config to obtain learning_rate, beta1, train_size, and epoch
     def train(self, config):
@@ -143,7 +144,7 @@ class DCGAN(object):
 
         self.g_sum = merge_summary([self.z_sum, self.d_fake_sum, self.G_sum, self.d_loss_fake_sum, self.g_loss_sum])
         self.d_sum = merge_summary([self.z_sum, self.d_real_sum, self.d_loss_real_sum, self.d_loss_sum])
-        self.writer = SummaryWriter("./logs", self.sess.graph)
+        self.writer = SummaryWriter('./logs_' + self.model_name, self.sess.graph)
         sample_z = np.random.uniform(-1, 1, size=(self.sample_num , self.z_dim))
         sample_files = self.data[0:self.sample_num]
         sample = [
@@ -167,6 +168,8 @@ class DCGAN(object):
         else:
             print(" [@] train from scratch")
 
+        errD_list = list()
+        errG_list = list()
         for epoch in xrange(config.epoch):
             batch_idxs = min(len(self.data), config.train_size) // self.batch_size
             for idx in xrange(0, batch_idxs):
@@ -186,6 +189,8 @@ class DCGAN(object):
 
                 # Update D network
                 batch_z = np.random.uniform(-1, 1, [self.batch_size, self.z_dim]).astype(np.float32)
+                ## random select texts as "wrong" texts
+                batch_y_random = [self.tags[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
                 _, summary_str = self.sess.run([d_optim, self.d_sum],
                     feed_dict={ self.inputs: batch_images, self.z: batch_z, \
                                 self.y: batch_y, self.y_random: batch_y_random })
@@ -193,12 +198,16 @@ class DCGAN(object):
 
                 # Update G network
                 batch_z = np.random.uniform(-1, 1, [self.batch_size, self.z_dim]).astype(np.float32)
+                ## random select texts as "wrong" texts
+                batch_y_random = [self.tags[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
                 _, summary_str = self.sess.run([g_optim, self.g_sum],
                     feed_dict={ self.z: batch_z, self.y: batch_y })
                 self.writer.add_summary(summary_str, counter)
 
                 # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
                 batch_z = np.random.uniform(-1, 1, [self.batch_size, self.z_dim]).astype(np.float32)
+                ## random select texts as "wrong" texts
+                batch_y_random = [self.tags[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
                 _, summary_str = self.sess.run([g_optim, self.g_sum],
                     feed_dict={ self.z: batch_z, self.y: batch_y })
                 self.writer.add_summary(summary_str, counter)
@@ -210,26 +219,31 @@ class DCGAN(object):
 
                 counter += 1
                 print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
-                    % (epoch, idx, batch_idxs, time.time() - start_time, errD_fake+errD_real+errD_wrong, errG))
+                    % (epoch, idx, batch_idxs, time.time() - start_time, errD_real+errD_fake+errD_wrong, errG))
+                errD_list.append(errD_real+errD_fake+errD_wrong)
+                errG_list.append(errG)
 
-                # if np.mod(counter, 100) == 1:
-            try:
-                samples, d_loss, g_loss = self.sess.run(
-                    [self.sampler, self.d_loss, self.g_loss],
-                        feed_dict={ self.z: sample_z,
-                                    self.inputs: sample_inputs,
-                                    self.y: batch_y,
-                                    self.y_random: batch_y_random})
-                manifold_h = int(np.ceil(np.sqrt(samples.shape[0])))
-                manifold_w = int(np.floor(np.sqrt(samples.shape[0])))
-                save_images(samples, [manifold_h, manifold_w],
-                            './{}/train_{:02d}_{:04d}.png'.format(self.temp_samples_dir, epoch, idx))
-                print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
-            except:
-                print("one pic error!...")
+                if np.mod(counter, 500) == 1:
+                    try:
+                        samples, d_loss, g_loss = self.sess.run(
+                            [self.sampler, self.d_loss, self.g_loss],
+                                feed_dict={ self.z: sample_z,
+                                            self.inputs: sample_inputs,
+                                            self.y: batch_y,
+                                            self.y_random: batch_y_random})
+                        manifold_h = int(np.ceil(np.sqrt(samples.shape[0])))
+                        manifold_w = int(np.floor(np.sqrt(samples.shape[0])))
+                        save_images(samples, [manifold_h, manifold_w],
+                                    './{}/train_{:02d}_{:04d}.png'.format(self.temp_samples_dir, epoch, idx))
+                        print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
+                    except:
+                        print("one pic error!...")
                 
-                # if np.mod(counter, 500) == 2:
-            self.save(self.save_dir, counter)
+                if np.mod(counter, 2000) == 2:
+                    self.save(self.save_dir, counter)
+                    ## Overwrite
+                    cPickle.dump(errD_list, open(os.path.join(self.save_dir, 'errD_list.pkl'), 'wb'))
+                    cPickle.dump(errG_list, open(os.path.join(self.save_dir, 'errG_list.pkl'), 'wb'))
 
     def discriminator(self, image, y=None, reuse=False):
         with tf.variable_scope("discriminator") as scope:
@@ -328,13 +342,13 @@ class WGAN(DCGAN):
         dataset_name='faces', input_fname_pattern='*.jpg', crop=False,
         gfc_dim=1024, dfc_dim=1024, c_dim=3,  
         save_dir='save_WGAN', temp_samples_dir='temp_samples_WGAN',
-        tag_filename='vec_hair_eyes.pkl', tag_filename_sp='blonde_hair_blue_eyes.pkl', clipping_value=0.01):
+        tag_filename='vec_hair_eyes.pkl', tag_filename_sp='blonde_hair_blue_eyes.pkl', clipping_value=0.01, infer=False):
         super(WGAN, self).__init__(sess, model_name, input_height, input_width, output_height, output_width,
             batch_size, sample_num, y_dim, z_dim, gf_dim, df_dim, t_dim,
             dataset_name, input_fname_pattern, crop,
             gfc_dim, dfc_dim, c_dim,
             save_dir, temp_samples_dir,
-            tag_filename, tag_filename_sp)
+            tag_filename, tag_filename_sp,infer)
         self.clipping_value = clipping_value
     ## Re-write build_model, train, and discriminator functions
     def build_model(self):
@@ -381,7 +395,7 @@ class WGAN(DCGAN):
         t_vars = tf.trainable_variables()
         self.d_vars = [var for var in t_vars if 'd_' in var.name]
         self.g_vars = [var for var in t_vars if 'g_' in var.name]
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep = None) ## keep all checkpoints!
 
     def train(self, config):
         d_optim = tf.train.RMSPropOptimizer(config.learning_rate).minimize(-self.d_loss, var_list=self.d_vars)
@@ -395,7 +409,7 @@ class WGAN(DCGAN):
 
         self.g_sum = merge_summary([self.z_sum, self.d_fake_sum, self.G_sum, self.d_loss_fake_sum, self.g_loss_sum])
         self.d_sum = merge_summary([self.z_sum, self.d_real_sum, self.d_loss_real_sum, self.d_loss_sum])
-        self.writer = SummaryWriter("./logs" + '_' + self.model_name, self.sess.graph)
+        self.writer = SummaryWriter('./logs_' + self.model_name, self.sess.graph)
         sample_z = np.random.uniform(-1, 1, size=(self.sample_num , self.z_dim))
         sample_files = self.data[0:self.sample_num]
         sample = [
@@ -419,6 +433,8 @@ class WGAN(DCGAN):
         else:
             print(" [@] train from scratch")
 
+        errD_list = list()
+        errG_list = list()
         for epoch in xrange(config.epoch):
             batch_idxs = min(len(self.data), config.train_size) // self.batch_size
             for idx in xrange(0, batch_idxs):
@@ -459,26 +475,31 @@ class WGAN(DCGAN):
 
                 counter += 1
                 print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
-                    % (epoch, idx, batch_idxs, time.time() - start_time, errD_fake+errD_real+errD_wrong, errG))
+                    % (epoch, idx, batch_idxs, time.time() - start_time, errD_real-errD_fake-errD_wrong, errG))
+                errD_list.append(errD_real-errD_fake-errD_wrong)
+                errG_list.append(errG)
 
-                # if np.mod(counter, 100) == 1:
-            try:
-                samples, d_loss, g_loss = self.sess.run(
-                    [self.sampler, self.d_loss, self.g_loss],
-                        feed_dict={ self.z: sample_z,
-                                    self.inputs: sample_inputs,
-                                    self.y: batch_y,
-                                    self.y_random: batch_y_random})
-                manifold_h = int(np.ceil(np.sqrt(samples.shape[0])))
-                manifold_w = int(np.floor(np.sqrt(samples.shape[0])))
-                save_images(samples, [manifold_h, manifold_w],
-                            './{}/train_{:02d}_{:04d}.png'.format(self.temp_samples_dir, epoch, idx))
-                print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
-            except:
-                print("one pic error!...")
+                if np.mod(counter, 500) == 1:
+                    try:
+                        samples, d_loss, g_loss = self.sess.run(
+                            [self.sampler, self.d_loss, self.g_loss],
+                                feed_dict={ self.z: sample_z,
+                                            self.inputs: sample_inputs,
+                                            self.y: batch_y,
+                                            self.y_random: batch_y_random})
+                        manifold_h = int(np.ceil(np.sqrt(samples.shape[0])))
+                        manifold_w = int(np.floor(np.sqrt(samples.shape[0])))
+                        save_images(samples, [manifold_h, manifold_w],
+                                    './{}/train_{:02d}_{:04d}.png'.format(self.temp_samples_dir, epoch, idx))
+                        print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
+                    except:
+                        print("one pic error!...")
                 
-                # if np.mod(counter, 500) == 2:
-            self.save(self.save_dir, counter)
+                if np.mod(counter, 2000) == 2:
+                    self.save(self.save_dir, counter)
+                    ## Overwrite
+                    cPickle.dump(errD_list, open(os.path.join(self.save_dir, 'errD_list.pkl'), 'wb'))
+                    cPickle.dump(errG_list, open(os.path.join(self.save_dir, 'errG_list.pkl'), 'wb'))
 
     def discriminator(self, image, y=None, reuse=False):
         with tf.variable_scope("discriminator") as scope:
@@ -505,13 +526,13 @@ class WGAN_v2(DCGAN):
         dataset_name='faces', input_fname_pattern='*.jpg', crop=False,
         gfc_dim=1024, dfc_dim=1024, c_dim=3,  
         save_dir='save_WGAN_v2', temp_samples_dir='temp_samples_WGAN_v2',
-        tag_filename='vec_hair_eyes.pkl', tag_filename_sp='blonde_hair_blue_eyes.pkl', scale=10.0):
+        tag_filename='vec_hair_eyes.pkl', tag_filename_sp='blonde_hair_blue_eyes.pkl', scale=10.0,infer=False):
         super(WGAN_v2, self).__init__(sess, model_name, input_height, input_width, output_height, output_width,
             batch_size, sample_num, y_dim, z_dim, gf_dim, df_dim, t_dim,
             dataset_name, input_fname_pattern, crop,
             gfc_dim, dfc_dim, c_dim,
             save_dir, temp_samples_dir,
-            tag_filename, tag_filename_sp)
+            tag_filename, tag_filename_sp,infer)
         self.scale = scale
     ## Re-write build_model, train, and discriminator functions
     def build_model(self):
@@ -558,17 +579,17 @@ class WGAN_v2(DCGAN):
         epsilon = tf.random_uniform([], 0.0, 1.0)
         x_hat = epsilon * inputs + (1 - epsilon) * self.G
         d_hat = self.discriminator(x_hat, self.y, reuse=True)
-        ddx = tf.gradients(d_hat, x_hat)[0]
-        ddx = tf.sqrt(tf.reduce_sum(tf.square(ddx), axis=1))
-        ddx = tf.reduce_mean(tf.square(ddx - 1.0) * self.scale)
-        self.d_loss = self.d_loss - ddx
+        self.ddx = tf.gradients(d_hat, x_hat)[0]
+        self.ddx = tf.sqrt(tf.reduce_sum(tf.square(self.ddx), axis=1))
+        self.ddx = tf.reduce_mean(tf.square(self.ddx - 1.0) * self.scale)
+        self.d_loss = self.d_loss - self.ddx
 
         self.g_loss_sum = scalar_summary("g_loss", self.g_loss)
         self.d_loss_sum = scalar_summary("d_loss", self.d_loss)
         t_vars = tf.trainable_variables()
         self.d_vars = [var for var in t_vars if 'd_' in var.name]
         self.g_vars = [var for var in t_vars if 'g_' in var.name]
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep = None) ## keep all checkpoints!
 
     def train(self, config):
         d_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1).minimize(-self.d_loss, var_list=self.d_vars)
@@ -581,7 +602,7 @@ class WGAN_v2(DCGAN):
 
         self.g_sum = merge_summary([self.z_sum, self.d_fake_sum, self.G_sum, self.d_loss_fake_sum, self.g_loss_sum])
         self.d_sum = merge_summary([self.z_sum, self.d_real_sum, self.d_loss_real_sum, self.d_loss_sum])
-        self.writer = SummaryWriter("./logs", self.sess.graph)
+        self.writer = SummaryWriter('./logs_' + self.model_name, self.sess.graph)
         sample_z = np.random.uniform(-1, 1, size=(self.sample_num , self.z_dim))
         sample_files = self.data[0:self.sample_num]
         sample = [
@@ -605,6 +626,8 @@ class WGAN_v2(DCGAN):
         else:
             print(" [@] train from scratch")
 
+        errD_list = list()
+        errG_list = list()
         for epoch in xrange(config.epoch):
             batch_idxs = min(len(self.data), config.train_size) // self.batch_size
             for idx in xrange(0, batch_idxs):
@@ -622,11 +645,27 @@ class WGAN_v2(DCGAN):
                 batch_y = [self.tags[int(re.split("\\.", os.path.basename(batch_file))[0])] for batch_file in batch_files]
                 batch_y = np.array(batch_y).astype(np.float32)
 
+                ## 2017/05/23:
+                ## (Special test) if y_dim == 9600
+                ## ==> Use self.tags to read hair vectors and self.tags_sp to read eyes vectors
+                if self.y_dim == 9600:
+                    batch_y_2 = [self.tags_sp[int(re.split("\\.", os.path.basename(batch_file))[0])] for batch_file in batch_files]
+                    batch_y_2 = np.array(batch_y_2).astype(np.float32)
+                    batch_y = np.concatenate([batch_y, batch_y_2], 1)
+
                 ## Update D network five times
                 for _ in range(5):
                     batch_z = np.random.uniform(-1, 1, [self.batch_size, self.z_dim]).astype(np.float32)
                     ## random select texts as "wrong" texts
                     batch_y_random = [self.tags[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
+                    ## 2017/05/23:
+                    ## (Special test) if y_dim == 9600
+                    ## ==> Use self.tags to read hair vectors and self.tags_sp to read eyes vectors
+                    if self.y_dim == 9600:
+                        batch_y_random_2 = [self.tags_sp[random_idx] for random_idx in np.random.choice(self.file_names, self.batch_size)]
+                        batch_y_random_2 = np.array(batch_y_random_2).astype(np.float32)
+                        batch_y_random = np.array(batch_y_random).astype(np.float32)
+                        batch_y_random = np.concatenate([batch_y_random, batch_y_random_2], 1)
                     _, summary_str = self.sess.run([d_optim, self.d_sum],
                         feed_dict={ self.inputs: batch_images, self.z: batch_z, \
                                     self.y: batch_y, self.y_random: batch_y_random })
@@ -641,30 +680,36 @@ class WGAN_v2(DCGAN):
                 errD_fake = self.d_loss_fake.eval({ self.z: batch_z, self.y: batch_y })
                 errD_real = self.d_loss_real.eval({ self.inputs: batch_images, self.y: batch_y })
                 errD_wrong = self.d_loss_wrong.eval({ self.inputs: batch_images, self.y_random: batch_y_random })
+                errD_ddx = self.ddx.eval({ self.inputs: batch_images, self.z: batch_z, self.y: batch_y })
                 errG = self.g_loss.eval({self.z: batch_z, self.y: batch_y})
 
                 counter += 1
                 print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
-                    % (epoch, idx, batch_idxs, time.time() - start_time, errD_fake+errD_real+errD_wrong, errG))
+                    % (epoch, idx, batch_idxs, time.time() - start_time, errD_real-errD_fake-errD_wrong-errD_ddx, errG))
+                errD_list.append(errD_real-errD_fake-errD_wrong-errD_ddx)
+                errG_list.append(errG)
 
-                # if np.mod(counter, 100) == 1:
-            try:
-                samples, d_loss, g_loss = self.sess.run(
-                    [self.sampler, self.d_loss, self.g_loss],
-                        feed_dict={ self.z: sample_z,
-                                    self.inputs: sample_inputs,
-                                    self.y: batch_y,
-                                    self.y_random: batch_y_random})
-                manifold_h = int(np.ceil(np.sqrt(samples.shape[0])))
-                manifold_w = int(np.floor(np.sqrt(samples.shape[0])))
-                save_images(samples, [manifold_h, manifold_w],
-                            './{}/train_{:02d}_{:04d}.png'.format(self.temp_samples_dir, epoch, idx))
-                print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
-            except:
-                print("one pic error!...")
+                if np.mod(counter, 200) == 1:
+                    try:
+                        samples, d_loss, g_loss = self.sess.run(
+                            [self.sampler, self.d_loss, self.g_loss],
+                                feed_dict={ self.z: sample_z,
+                                            self.inputs: sample_inputs,
+                                            self.y: batch_y,
+                                            self.y_random: batch_y_random})
+                        manifold_h = int(np.ceil(np.sqrt(samples.shape[0])))
+                        manifold_w = int(np.floor(np.sqrt(samples.shape[0])))
+                        save_images(samples, [manifold_h, manifold_w],
+                                    './{}/train_{:02d}_{:04d}.png'.format(self.temp_samples_dir, epoch, idx))
+                        print("[Sample] d_loss: %.8f, g_loss: %.8f" % (d_loss, g_loss)) 
+                    except:
+                        print("one pic error!...")
                 
-                # if np.mod(counter, 500) == 2:
-            self.save(self.save_dir, counter)
+                if np.mod(counter, 500) == 2:
+                    self.save(self.save_dir, counter)
+                    ## Overwrite
+                    cPickle.dump(errD_list, open(os.path.join(self.save_dir, 'errD_list.pkl'), 'wb'))
+                    cPickle.dump(errG_list, open(os.path.join(self.save_dir, 'errG_list.pkl'), 'wb'))
 
     def discriminator(self, image, y=None, reuse=False):
         with tf.variable_scope("discriminator") as scope:
@@ -674,7 +719,14 @@ class WGAN_v2(DCGAN):
             h1 = lrelu(self.d_bn1(conv2d(h0, self.df_dim*2, name='d_h1_conv')))  ## h1: [-1, 16, 16, df_dim*2]
             h2 = lrelu(self.d_bn2(conv2d(h1, self.df_dim*4, name='d_h2_conv')))  ## h2: [-1, 8, 8, df_dim*4]
             h3 = lrelu(self.d_bn3(conv2d(h2, self.df_dim*8, name='d_h3_conv')))  ## h3: [-1, 4, 4, df_dim*8]
-            yb = lrelu(linear(y, self.t_dim, 'd_embedding'))
+            if self.y_dim == 9600:
+                ## Splits y into 2 tensors along axis 1: [batch_size, 9600] ==> [batch_size , 4800], [batch_size , 4800]
+                y_hair, y_eyes = tf.split(y, 2, 1)
+                yb_hair = lrelu(linear(y_hair, self.t_dim // 2, 'd_hair_embedding'))
+                yb_eyes = lrelu(linear(y_eyes, self.t_dim // 2, 'd_eyes_embedding'))
+                yb = concat([yb_hair, yb_eyes], 1)
+            else:
+                yb = lrelu(linear(y, self.t_dim, 'd_embedding'))
             yb = tf.expand_dims(yb,1)
             yb = tf.expand_dims(yb,2)
             yb = tf.tile(yb, [1,4,4,1], name='tiled_embeddings')
@@ -683,3 +735,59 @@ class WGAN_v2(DCGAN):
                 name = 'd_h3_conv_new'))) ## h3_new: [-1, 4, 4, df_dim*8]
             h4 = linear(tf.reshape(h3_new, [self.batch_size, -1]), 1, 'd_h3_lin')
             return h4
+    def generator(self, z, y=None):
+        with tf.variable_scope("generator") as scope:
+            s_h, s_w = self.output_height, self.output_width                        ## 64, 64
+            s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)     ## 32, 32
+            s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)   ## 16, 16
+            s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)   ## 8, 8
+            s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2) ## 4, 4
+            if self.y_dim == 9600:
+                ## Splits y into 2 tensors along axis 1: [batch_size, 9600] ==> [batch_size , 4800], [batch_size , 4800]
+                y_hair, y_eyes = tf.split(y, 2, 1)
+                yb_hair = lrelu(linear(y_hair, self.t_dim // 2, 'g_hair_embedding'))
+                yb_eyes = lrelu(linear(y_eyes, self.t_dim // 2, 'g_eyes_embedding'))
+                yb = concat([yb_hair, yb_eyes], 1)
+            else:
+                yb = lrelu(linear(y, self.t_dim, 'g_embedding'))
+            z = concat([z, yb], 1)
+            z_ = linear(z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin')
+            h0 = tf.reshape(z_, [-1, s_h16, s_w16, self.gf_dim*8])
+            h0 = tf.nn.relu(self.g_bn0(h0))
+            h1 = deconv2d(h0, [self.batch_size, s_h8, s_w8, self.gf_dim*4], name='g_h1')
+            h1 = tf.nn.relu(self.g_bn1(h1))
+            h2 = deconv2d(h1, [self.batch_size, s_h4, s_w4, self.gf_dim*2], name='g_h2')
+            h2 = tf.nn.relu(self.g_bn2(h2))
+            h3 = deconv2d(h2, [self.batch_size, s_h2, s_w2, self.gf_dim*1], name='g_h3')
+            h3 = tf.nn.relu(self.g_bn3(h3))
+            h4 = deconv2d(h3, [self.batch_size, s_h, s_w, self.c_dim], name='g_h4')
+            return (tf.tanh(h4)/2. + 0.5)
+
+    def sampler(self, z, y=None):
+        with tf.variable_scope("generator") as scope:
+            scope.reuse_variables()
+            s_h, s_w = self.output_height, self.output_width                        ## 64, 64
+            s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)     ## 32, 32
+            s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)   ## 16, 16
+            s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)   ## 8, 8
+            s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2) ## 4, 4
+            if self.y_dim == 9600:
+                ## Splits y into 2 tensors along axis 1: [batch_size, 9600] ==> [batch_size , 4800], [batch_size , 4800]
+                y_hair, y_eyes = tf.split(y, 2, 1)
+                yb_hair = lrelu(linear(y_hair, self.t_dim // 2, 'g_hair_embedding'))
+                yb_eyes = lrelu(linear(y_eyes, self.t_dim // 2, 'g_eyes_embedding'))
+                yb = concat([yb_hair, yb_eyes], 1)
+            else:
+                yb = lrelu(linear(y, self.t_dim, 'g_embedding'))
+            z = concat([z, yb], 1)
+            z_ = linear(z, self.gf_dim*8*s_h16*s_w16, 'g_h0_lin')
+            h0 = tf.reshape(z_, [-1, s_h16, s_w16, self.gf_dim*8])
+            h0 = tf.nn.relu(self.g_bn0(h0, train=False))
+            h1 = deconv2d(h0, [self.batch_size, s_h8, s_w8, self.gf_dim*4], name='g_h1')
+            h1 = tf.nn.relu(self.g_bn1(h1, train=False))
+            h2 = deconv2d(h1, [self.batch_size, s_h4, s_w4, self.gf_dim*2], name='g_h2')
+            h2 = tf.nn.relu(self.g_bn2(h2, train=False))
+            h3 = deconv2d(h2, [self.batch_size, s_h2, s_w2, self.gf_dim*1], name='g_h3')
+            h3 = tf.nn.relu(self.g_bn3(h3, train=False))
+            h4 = deconv2d(h3, [self.batch_size, s_h, s_w, self.c_dim], name='g_h4')
+            return (tf.tanh(h4)/2. + 0.5)

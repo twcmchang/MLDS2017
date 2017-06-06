@@ -48,11 +48,17 @@ def generate(args):
         lines = f.readlines()
         for line in lines:
             idx, desc = re.split(',', line)
-            vec = skipthoughts.encode(skipthoughts_model, [desc.strip()], verbose = False)
-            test_dict[idx] = vec
-
-    if not os.path.exists(args.sample_dir):
-        os.makedirs(args.sample_dir)
+            if saved_args.y_dim == 9600:
+                hair = re.findall('[a-zA-Z]+ hair', desc, flags=0)
+                hair = [re.sub(' hair', '', hair[0])]
+                vec_hair = skipthoughts.encode(skipthoughts_model, hair, verbose = False)
+                eyes = re.findall('[a-zA-Z]+ eyes', desc, flags=0)
+                eyes = [re.sub(' eyes', '', eyes[0])]
+                vec_eyes = skipthoughts.encode(skipthoughts_model, eyes, verbose = False)
+                test_dict[idx] = np.concatenate([vec_hair,vec_eyes], 1)
+            else:
+                vec = skipthoughts.encode(skipthoughts_model, [desc.strip()], verbose = False)
+                test_dict[idx] = vec
 
     run_config = tf.ConfigProto()
     run_config.gpu_options.allow_growth=False
@@ -77,7 +83,8 @@ def generate(args):
                 save_dir=saved_args.save_dir,
                 temp_samples_dir=saved_args.temp_samples_dir,
                 tag_filename=saved_args.tag_filename,
-                tag_filename_sp=saved_args.tag_filename_sp)
+                tag_filename_sp=saved_args.tag_filename_sp,
+                infer=True)
         elif saved_args.model == 'WGAN':
             gan = WGAN(
                 sess,
@@ -98,7 +105,8 @@ def generate(args):
                 temp_samples_dir=saved_args.temp_samples_dir,
                 tag_filename=saved_args.tag_filename,
                 tag_filename_sp=saved_args.tag_filename_sp,
-                clipping_value = saved_args.clipping_value)
+                clipping_value = saved_args.clipping_value,
+                infer=True)
         elif saved_args.model == 'WGAN_v2':
             gan = WGAN_v2(
                 sess,
@@ -119,14 +127,21 @@ def generate(args):
                 temp_samples_dir=saved_args.temp_samples_dir,
                 tag_filename=saved_args.tag_filename,
                 tag_filename_sp=saved_args.tag_filename_sp,
-                scale = saved_args.scale)
+                scale = saved_args.scale,
+                infer=True)
         gan.build_model()
         try:
             tf.global_variables_initializer().run()
         except:
             tf.initialize_all_variables().run()
         # show_all_variables()
-        gan.load(args.init_from)
+        could_load, checkpoint_counter = gan.load(args.init_from)
+        if could_load:
+            # args.sample_dir = args.sample_dir + str(checkpoint_counter)
+            if not os.path.exists(args.sample_dir):
+                os.makedirs(args.sample_dir)
+        else:
+            print('load fail!!!')
 
         for idx,vec in test_dict.items():
             sample_z = np.random.uniform(-1, 1, size=(gan.batch_size, saved_args.z_dim))
