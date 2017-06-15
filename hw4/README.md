@@ -1,39 +1,40 @@
 # HW4 - Seq2seq & RL
 
 ## Train
-Put training data(change the file name to 'cornell') into data/ (e.g. hw4/data/cornell)
 ```
-python3 main.py
+bash run_train.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
 ```
 ## Test
 ```
-python3 main.py --test 
+bash run_train.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
 ```
 results generated in 'save/model/samples_predictions.txt'
-or
-```
-python3 main.py --test interactive
-```
 
-# ChatBot 
-- [Slide][slide]
-- Deadline: 6/8(Thu.) 23:59:59 (UTC+8)
-- Open domain & Single turn
+# Features
+- Sequence-to-sequence Model
+- Attention Mechanism
+- Bidirectional Encoder for First Layer
+- Residual Connections
+- Scheduled Sampling
+- Reinforcement Learning
+- Beam Search
+- AntiLM
 
 ## Dataset (list in slides)
 - [Cornell Movie-Dialogs Corpus][CMDS]
 - [OpenSubtitles][OS]
 - [Marsan-Ma chat-corpus][MMCC]
-- [chatterbot corpus][CBC]
-- [CallHome][CH]
 
 ## Others
-- [Search QA][SQA]
+
 
 ## References
+- [Tf Chatbot Seq2seq AntiLM][MM]
+- [Search QA][SQA]
 - [Deep learning based chatbot][DLBC]
 - [Deep Reinforcement Learning for Dialogue Generation][DRLDG]
 
+[MM]:https://github.com/Marsan-Ma/tf_chatbot_seq2seq_antilm
 [slide]: https://docs.google.com/presentation/d/1e-9a7MmHDi1OfXrSFh_NOuyXjK2cN640JcZ5D08MBEk/edit#slide=id.g1efeb48205_0_0
 [CMDS]: https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html
 [OS]: http://opus.lingfil.uu.se/OpenSubtitles.php
