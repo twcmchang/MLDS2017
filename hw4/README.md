@@ -1,14 +1,14 @@
 # HW4 - Seq2seq & RL
 
-## Train
+## Testing
+```
+bash run.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
+```
+
+## Training
 ```
 bash run_train.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
 ```
-## Test
-```
-bash run_train.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
-```
-results generated in 'save/model/samples_predictions.txt'
 
 # Features
 - Sequence-to-sequence Model
