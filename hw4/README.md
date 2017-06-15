@@ -25,9 +25,6 @@ results generated in 'save/model/samples_predictions.txt'
 - [OpenSubtitles][OS]
 - [Marsan-Ma chat-corpus][MMCC]
 
-## Others
-
-
 ## References
 - [Tf Chatbot Seq2seq AntiLM][MM]
 - [Search QA][SQA]
