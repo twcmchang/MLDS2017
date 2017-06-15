@@ -4,11 +4,16 @@
 ```
 bash run.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
 ```
+Trained Models and vocabularies would be downloaded.
 
 ## Training
 ```
-bash run_train.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
+bash train.sh [<workspace>] [S2S, BiS2S] [RL] [SS]
 ```
+Before training, a work space should be created in works/<workspace>, and training data should be put in works/<workspace>/data/train/ and named and packaged as chat.txt.gz.
+- [S2S, BiS2S]: Attention-based Seq2seq (S2S) or Bidirectional-encoder Seq2seq (BiS2S)
+- [RL]: True for using reinforcement learning
+- [SS]: True for using scheduled sampling for training model
 
 # Features
 - Sequence-to-sequence Model
