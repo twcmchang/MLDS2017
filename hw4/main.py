@@ -1,29 +1,28 @@
-#!/usr/bin/env python3
+import os, sys, argparse
 
-# Copyright 2015 Conchylicultor. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-"""
-Main script. See README.md for more information
+import tensorflow as tf
 
-Use python 3
-"""
+from lib.config import params_setup
+from lib.train import train
+from lib.predict import predict
+from lib.chat import chat
+# from lib.mert import mert
 
-from chatbot import chatbot
+
+def main(_):
+    args = params_setup()
+    print("[args]: ", args)
+    if args.mode == 'train':
+      train(args)
+    elif args.mode == 'test':
+      predict(args)
+    elif args.mode == 'chat':
+      chat(args)
+    # elif args.mode == 'mert':
+    #   mert(args)
 
 
 if __name__ == "__main__":
-    chatbot = chatbot.Chatbot()
-    chatbot.main()
+    tf.app.run()

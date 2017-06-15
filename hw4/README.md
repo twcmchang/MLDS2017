@@ -1,39 +1,39 @@
-# Seq2Seq chatbot (without reinforcement learning)
+# HW4 - Seq2seq & RL
 
-## Train
-Put training data(change the file name to 'cornell') into data/ (e.g. hw4/data/cornell)
+## Testing
 ```
-python3 main.py
+bash run.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
 ```
-## Test
-```
-python3 main.py --test 
-```
-results generated in 'save/model/samples_predictions.txt'
-or
-```
-python3 main.py --test interactive
-```
+Trained Models and vocabularies would be downloaded.
 
-# ChatBot 
-- [Slide][slide]
-- Deadline: 6/8(Thu.) 23:59:59 (UTC+8)
-- Open domain & Single turn
+## Training
+```
+python3 main.py --mode train --model_name workspace
+```
+Before training, a work space should be created in works/workspace, and training data should be put in works/workspace/data/train/ and named and packaged as chat.txt.gz.
 
-## Dataset (list in slides)
+# Features
+- Sequence-to-sequence Model
+- Attention Mechanism
+- Bidirectional Encoder for First Layer
+- Residual Connections
+- Scheduled Sampling
+- Reinforcement Learning
+- Beam Search
+- AntiLM
+
+## Datasets
 - [Cornell Movie-Dialogs Corpus][CMDS]
 - [OpenSubtitles][OS]
 - [Marsan-Ma chat-corpus][MMCC]
-- [chatterbot corpus][CBC]
-- [CallHome][CH]
-
-## Others
-- [Search QA][SQA]
 
 ## References
+- [Tf Chatbot Seq2seq AntiLM][MM]
+- [Search QA][SQA]
 - [Deep learning based chatbot][DLBC]
 - [Deep Reinforcement Learning for Dialogue Generation][DRLDG]
 
+[MM]:https://github.com/Marsan-Ma/tf_chatbot_seq2seq_antilm
 [slide]: https://docs.google.com/presentation/d/1e-9a7MmHDi1OfXrSFh_NOuyXjK2cN640JcZ5D08MBEk/edit#slide=id.g1efeb48205_0_0
 [CMDS]: https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html
 [OS]: http://opus.lingfil.uu.se/OpenSubtitles.php
