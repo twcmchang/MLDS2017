@@ -1,4 +1,4 @@
-# Seq2Seq chatbot (without reinforcement learning)
+# HW4 - Seq2seq & RL
 
 ## Train
 Put training data(change the file name to 'cornell') into data/ (e.g. hw4/data/cornell)
