@@ -8,9 +8,9 @@ Trained Models and vocabularies would be downloaded.
 
 ## Training
 ```
-bash train.sh [<workspace>]
+bash train.sh [workspace]
 ```
-Before training, a work space should be created in works/'<workspace>', and training data should be put in works/<workspace>/data/train/ and named and packaged as chat.txt.gz.
+Before training, a work space should be created in works/workspace, and training data should be put in works/workspace/data/train/ and named and packaged as chat.txt.gz.
 
 # Features
 - Sequence-to-sequence Model
