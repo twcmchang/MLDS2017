@@ -20,7 +20,7 @@ bash run_train.sh [S2S, RL, BEST] [INPUT_FILE] [OUTPUT_FILE]
 - Beam Search
 - AntiLM
 
-## Dataset (list in slides)
+## Datasets
 - [Cornell Movie-Dialogs Corpus][CMDS]
 - [OpenSubtitles][OS]
 - [Marsan-Ma chat-corpus][MMCC]
